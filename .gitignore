@@ -1,0 +1,10 @@
+/.vs/TiroApp/v14/*.suo
+/TiroApp/TiroApp.Droid/*.user
+/TiroApp/TiroApp.Droid/bin
+/TiroApp/TiroApp.Droid/obj
+/packages
+/TiroApp/TiroApp/bin
+/TiroApp/TiroApp/obj
+/TiroApp/TiroApp.iOS/obj
+/TiroApp/TiroApp.iOS/bin
+/TiroApp/TiroApp.iOS/*.user

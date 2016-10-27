@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4310699A-B8D6-401A-A0B0-5EEF8DDA7BCA}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TiroApp</RootNamespace>
+    <AssemblyName>TiroApp</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Profile111</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="App.cs" />
+    <Compile Include="DataGate.cs" />
+    <Compile Include="Ext\MD5.cs" />
+    <Compile Include="Model\Client.cs" />
+    <Compile Include="Model\PaymentHelper.cs" />
+    <Compile Include="Pages\AccountPage.cs" />
+    <Compile Include="Pages\EditInfoPage.cs" />
+    <Compile Include="Pages\EditPaymentPage.cs" />
+    <Compile Include="Pages\Mua\MuaAccountPage.cs" />
+    <Compile Include="Pages\Mua\MuaServicesPage.cs" />
+    <Compile Include="Pages\SearchFilersPage.cs" />
+    <Compile Include="Pages\Mua\AppointmentDetail.cs" />
+    <Compile Include="Services\FacebookHelper.cs" />
+    <Compile Include="Model\AppointmentItem.cs" />
+    <Compile Include="Model\GeoCoordinate.cs" />
+    <Compile Include="Model\InstagramHelper.cs" />
+    <Compile Include="Model\GlobalStorage.cs" />
+    <Compile Include="Model\Order.cs" />
+    <Compile Include="Model\OrderProcess.cs" />
+    <Compile Include="Notification\CrossPushNotificationListener.cs" />
+    <Compile Include="Pages\BasePage.cs" />
+    <Compile Include="Pages\AvailabilityPage.cs" />
+    <Compile Include="Pages\CustomerAppointments.cs" />
+    <Compile Include="Pages\HomePage.cs" />
+    <Compile Include="Pages\Mua\MuaBasePage.cs" />
+    <Compile Include="Pages\Mua\MuaHomePage.cs" />
+    <Compile Include="Pages\Mua\MuaLoginPage.cs" />
+    <Compile Include="Pages\Mua\MuaAddServicePage.cs" />
+    <Compile Include="Pages\Mua\MuaSignupPage.cs" />
+    <Compile Include="Pages\MuaPage.cs" />
+    <Compile Include="Pages\OrderSummary.cs" />
+    <Compile Include="Pages\SearchPage.cs" />
+    <Compile Include="Pages\LoginPage.cs" />
+    <Compile Include="Pages\LaunchPage.cs" />
+    <Compile Include="Pages\SignUpEmailPage.cs" />
+    <Compile Include="Model\PlaceSearchHelper.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\GeoLocation\Geolocator.cs" />
+    <Compile Include="Services\GeoLocation\IGeolocator.cs" />
+    <Compile Include="Services\GeoLocation\Position.cs" />
+    <Compile Include="Services\GeoLocation\PositionExtensions.cs" />
+    <Compile Include="Services\IDevice.cs" />
+    <Compile Include="Services\IDisplay.cs" />
+    <Compile Include="Services\IEmailService.cs" />
+    <Compile Include="Services\IFileSaveLoad.cs" />
+    <Compile Include="Services\INetwork.cs" />
+    <Compile Include="Services\IShowGmaps.cs" />
+    <Compile Include="Services\IURILauncher.cs" />
+    <Compile Include="Services\Media\IMediaPicker.cs" />
+    <Compile Include="Services\Media\MediaExtensions.cs" />
+    <Compile Include="Services\Media\MediaFile.cs" />
+    <Compile Include="Services\Media\MediaFileNoteFoundException.cs" />
+    <Compile Include="Services\Media\MediaStorageOptions.cs" />
+    <Compile Include="Services\NetworkStatus.cs" />
+    <Compile Include="UIUtils.cs" />
+    <Compile Include="Utils.cs" />
+    <Compile Include="Views\AccountLayout.cs" />
+    <Compile Include="Views\AppointmentViewCell.cs" />
+    <Compile Include="Views\AutoCompleteView.cs" />
+    <Compile Include="Views\CalendarView.cs" />
+    <Compile Include="Views\ConfirmDialog.cs" />
+    <Compile Include="Views\CustomEntry.cs" />
+    <Compile Include="Views\CustomerSignupView.cs" />
+    <Compile Include="Views\RadioButton.cs" />
+    <Compile Include="Views\RatingLayout.cs" />
+    <Compile Include="Views\SearchHeader.cs" />
+    <Compile Include="Views\TabView.cs" />
+    <Compile Include="Props.cs" />
+    <Compile Include="Views\CustomLabel.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="GettingStarted.Xamarin" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ImageCircle.Forms.Plugin.Abstractions, Version=1.8.0.5, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Xam.Plugins.Forms.ImageCircle.1.8.0.5\lib\portable-net45+wp80+win8+wpa81\ImageCircle.Forms.Plugin.Abstractions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.9.0.1\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PCLCrypto, Version=0.5.0.0, Culture=neutral, PublicKeyToken=d4421c8a4786956c, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\PCLCrypto.0.5.0.14108\lib\portable-net40+sl50+win+wpa81+wp80\PCLCrypto.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PCLCrypto.Abstractions, Version=0.5.0.0, Culture=neutral, PublicKeyToken=d4421c8a4786956c, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\PCLCrypto.0.5.0.14108\lib\portable-net40+sl50+win+wpa81+wp80\PCLCrypto.Abstractions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PushNotification.Plugin, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Xam.Plugin.PushNotification.1.2.4\lib\portable-net45+wp8+wpa81+win8+MonoAndroid10+MonoTouch10+Xamarin.iOS10+UAP10\PushNotification.Plugin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PushNotification.Plugin.Abstractions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Xam.Plugin.PushNotification.1.2.4\lib\portable-net45+wp8+wpa81+win8+MonoAndroid10+MonoTouch10+Xamarin.iOS10+UAP10\PushNotification.Plugin.Abstractions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Validation, Version=2.0.0.0, Culture=neutral, PublicKeyToken=2fc06f0d701809a7, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Validation.2.0.4.14103\lib\portable-windows8+net40+sl5+wp8+wpa81+wp81+MonoAndroid+MonoTouch\Validation.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xamarin.Forms.Core, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Xamarin.Forms.2.3.2.127\lib\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Xamarin.Forms.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xamarin.Forms.Platform, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Xamarin.Forms.2.3.2.127\lib\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Xamarin.Forms.Platform.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xamarin.Forms.Xaml, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Xamarin.Forms.2.3.2.127\lib\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Xamarin.Forms.Xaml.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\w1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\ArrowBack.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\search.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\avatar.png" />
+    <EmbeddedResource Include="Images\appointment.png" />
+    <EmbeddedResource Include="Images\home.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\wallet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\facebook.png" />
+    <EmbeddedResource Include="Images\twitter.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\pinterest.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\instagram.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menuBtn.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\ArrowBackBlack.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\RadioChecked.png" />
+    <EmbeddedResource Include="Images\RadioUnchecked.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\PlusBlack.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\searchBackground.png" />
+    <EmbeddedResource Include="Images\homew1.jpg" />
+    <EmbeddedResource Include="Images\homew2.jpg" />
+    <EmbeddedResource Include="Images\homew3.jpg" />
+    <EmbeddedResource Include="Images\filter.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\calendar.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\plus.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menuBtnWhite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\searchBackground2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\close.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\unchecked.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\checked.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\searchBackgroundBig.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\goToMua.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\location.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\star.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\starFill.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\starHalfFill.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\muah_availability.png" />
+    <EmbeddedResource Include="Images\muah_logout.png" />
+    <EmbeddedResource Include="Images\muah_services.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\muaIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\plusService.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\minusService.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\check.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\muaBackground.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\launch.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\empty_profile.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\count_bg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\closeBlack.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\visa.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\confirmed.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\ArrowDown.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\declined.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Project="..\..\packages\Xamarin.Forms.2.3.2.127\build\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Xamarin.Forms.targets" Condition="Exists('..\..\packages\Xamarin.Forms.2.3.2.127\build\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Xamarin.Forms.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\Xamarin.Forms.2.3.2.127\build\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Xamarin.Forms.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Xamarin.Forms.2.3.2.127\build\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Xamarin.Forms.targets'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
