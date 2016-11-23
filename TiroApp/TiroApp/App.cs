@@ -1,4 +1,5 @@
-﻿using PushNotification.Plugin;
+﻿using Gis4Mobile.Services.GeoLocation;
+using PushNotification.Plugin;
 using TiroApp.Pages;
 using Xamarin.Forms;
 
@@ -26,6 +27,7 @@ namespace TiroApp
                 p = new LaunchPage();
             }
             MainPage = new NavigationPage(p);
+            Geolocator.Instance.GetPosition();
         }
 
         protected override void OnStart()

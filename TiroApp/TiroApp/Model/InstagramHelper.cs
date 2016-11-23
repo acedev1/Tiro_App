@@ -12,7 +12,7 @@ namespace TiroApp.Model
 {
     public class InstagramHelper
     {
-        const string CLIENT_ID = "742adcaf27074f9996b3848373f1e09f";
+        const string CLIENT_ID = "e3ec17aebc6a4cd69ba012277ca2b88e";
         public const string REDIRECT_URI = "http://tiro.flexible-solutions.com.ua";
 
         private string username;

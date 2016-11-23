@@ -17,12 +17,14 @@ namespace TiroApp.Views
         private string searchBackgroundSource = "TiroApp.Images.searchBackground.png";
         private string searchBackgroundBigSource = "TiroApp.Images.searchBackgroundBig.png";
         public Image searchBackgroundBig;
-        public Image filterIcon;
+        public Image sortIcon;
         public SearchFilersPage filersPage;
         private CustomLabel placeLabel;
         private static bool isFreeMakeover = false;
+        private RelativeLayout sortContainer;
 
         public event EventHandler OnSearchClick;
+        public event EventHandler OnSortChanged;
 
         public SearchHeader()
         {
@@ -36,14 +38,12 @@ namespace TiroApp.Views
             rl.WidthRequest = Math.Min(App.ScreenWidth, Device.OnPlatform(400, 480, 400));
             this.Children.Add(rl, Constraint.RelativeToParent(p => (p.Width - rl.WidthRequest) / 2), Constraint.Constant(0));
 
-            filterIcon = new Image();
-            filterIcon.Source = ImageSource.FromResource("TiroApp.Images.filter.png");
-            filterIcon.HeightRequest = 22;
-            filterIcon.WidthRequest = filterIcon.HeightRequest;
-            filterIcon.Margin = new Thickness(5, 10, 5, 0);
-            filterIcon.GestureRecognizers.Add(new TapGestureRecognizer((v) =>
-            {               
-            }));
+            sortIcon = new Image();
+            sortIcon.Source = ImageSource.FromResource("TiroApp.Images.search_sort_icon.png");
+            sortIcon.HeightRequest = 22;
+            sortIcon.WidthRequest = sortIcon.HeightRequest;
+            sortIcon.Margin = new Thickness(5, 10, 5, 0);
+            sortIcon.GestureRecognizers.Add(new TapGestureRecognizer(OnSortClick));
 
             searchBackgroundBig = new Image
             {
@@ -136,7 +136,7 @@ namespace TiroApp.Views
 
             
 
-            rl.Children.Add(filterIcon
+            rl.Children.Add(sortIcon
                 , Constraint.RelativeToParent(p => { return p.Width - 40; })
                 , Constraint.Constant(15));
 
@@ -193,7 +193,7 @@ namespace TiroApp.Views
                 , Constraint.Constant(Device.OnPlatform(50, 80, 50))
                 , Constraint.Constant(48));            
         }
-
+        
         private void FilersPage_OnSelect(object sender, EventArgs e)
         {
             string t = "";
@@ -381,5 +381,100 @@ namespace TiroApp.Views
                 return isFreeMakeover;
             }
         }
+
+        private void OnSortClick(View arg1, object arg2)
+        {
+            var main = ParentPage.Content as RelativeLayout;
+            if (main == null)
+                return;
+            if (sortContainer == null)
+            {
+                sortContainer = new RelativeLayout();
+                sortContainer.BackgroundColor = Props.BlackoutColor;
+                main.Children.Add(sortContainer, Constraint.Constant(0), Constraint.Constant(0),
+                    Constraint.RelativeToParent(p => p.Width), Constraint.RelativeToParent(p => p.Height));
+
+                var sl = new StackLayout()
+                {
+                    Orientation = StackOrientation.Vertical,
+                    Padding = new Thickness(40, 20),
+                    BackgroundColor = Color.White,
+                    WidthRequest = 200
+                };
+                sortContainer.Children.Add(sl,
+                    Constraint.RelativeToParent(p => { return (p.Width - sl.Width) / 2; }),
+                    Constraint.RelativeToParent(p => { return (p.Height - sl.Height) / 2; }));
+
+                var title = new CustomLabel()
+                {
+                    Text = "Sort By",
+                    TextColor = Color.Black,
+                    FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR,
+                    FontSize = 16,
+                    HorizontalOptions = LayoutOptions.Start
+                };
+                sl.Children.Add(title);
+
+                var list = new List<RadioButton>();
+                sl.Children.Add(MakeSortCheckBox("Ratings", SearchSortType.Rating, list));
+                sl.Children.Add(MakeSortCheckBox("Nearest", SearchSortType.Nearest, list));
+                sl.Children.Add(MakeSortCheckBox("Highest Price", SearchSortType.HighestPrice, list));
+                sl.Children.Add(MakeSortCheckBox("Lowest Price", SearchSortType.LowestPrice, list));
+                list[0].IsChecked = true;
+
+                var cancel = new CustomLabel()
+                {
+                    Text = "Cancel",
+                    TextColor = Props.ButtonColor,
+                    FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR,
+                    FontSize = 16,
+                    HorizontalOptions = LayoutOptions.EndAndExpand
+                };
+                cancel.GestureRecognizers.Add(new TapGestureRecognizer(v => { sortContainer.IsVisible = false; }));
+                sl.Children.Add(cancel);
+
+            }
+            sortContainer.IsVisible = true;
+        }
+
+        private RadioButton MakeSortCheckBox(string text, SearchSortType type, List<RadioButton> list)
+        {
+            var checkBox = new RadioButton(false);
+            checkBox.Text = text;
+            checkBox.TextColor = Color.Black;
+            checkBox.FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR;
+            checkBox.FontSize = 16;
+            checkBox.HeightRequest = 50;
+            checkBox.VerticalOptions = LayoutOptions.Center;
+            checkBox.SetValue(UIUtils.TagProperty, type);
+            list.Add(checkBox);
+            checkBox.OnCheckedChange += (s, args) =>
+            {
+                foreach (var cb in list)
+                {
+                    if (s == cb)
+                    {
+                        SearchSort = (SearchSortType)cb.GetValue(UIUtils.TagProperty);
+                        sortContainer.IsVisible = false;
+                        OnSortChanged?.Invoke(this, EventArgs.Empty);
+                    }
+                    else
+                    {
+                        cb.IsChecked = false;
+                    }
+                }
+            };
+            return checkBox;
+        }
+
+        public SearchSortType SearchSort { get; set; } = SearchSortType.Rating;
+    }
+
+    public enum SearchSortType
+    {
+        Rating,
+        Nearest,
+        HighestPrice,
+        LowestPrice
     }
 }

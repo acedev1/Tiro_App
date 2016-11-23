@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using TiroApp.Views;
 using Xamarin.Forms;
 using System;
+using Gis4Mobile.Services.GeoLocation;
 
 namespace TiroApp.Pages
 {
@@ -20,6 +21,7 @@ namespace TiroApp.Pages
         private ActivityIndicator spinner;
         private SearchHeader searchHeader;
         private RelativeLayout mainLayout;
+        private IEnumerable<MuaDataItem> muaData;
 
         public SearchPage()
         {
@@ -115,10 +117,11 @@ namespace TiroApp.Pages
             searchHeader = new SearchHeader();
             searchHeader.ParentPage = this;
             searchHeader.OnSearchClick += SearchButton_Clicked;
+            searchHeader.OnSortChanged += SearchHeader_OnSortChanged;
             mainLayout.Children.Add(searchHeader, 
                 Constraint.Constant(0), Constraint.Constant(0));
         }
-
+        
         private void OnItemSelected(object sender, ItemTappedEventArgs e)
         {
             SpinnerShowChange(true);
@@ -180,11 +183,11 @@ namespace TiroApp.Pages
                 if (data.Code == ResponseCode.OK)
                 {
                     var sellersEl = JArray.Parse(data.Result);
-                    var sellers = sellersEl.Select(s => new MuaDataItem((JObject)s));
+                    muaData = sellersEl.Select(s => new MuaDataItem((JObject)s));
                     Device.BeginInvokeOnMainThread(() =>
                     {
                         muaList.ItemsSource = null;
-                        muaList.ItemsSource = sellers;
+                        SearchHeader_OnSortChanged(null, null);
                     });
                 }
                 else
@@ -201,7 +204,33 @@ namespace TiroApp.Pages
                 DataGate.DoMUASearchJson(sendData, lFilter, aFilter, callback);
             }
         }
-        
+
+        private void SearchHeader_OnSortChanged(object sender, EventArgs e)
+        {
+            var itemSource = muaData;
+            switch (searchHeader.SearchSort)
+            {
+                case SearchSortType.Rating:
+                    itemSource = muaData.OrderByDescending(m => m.Rating);
+                    break;
+                case SearchSortType.Nearest:
+                    var currPosition = Geolocator.Instance.LastKnowPosition;
+                    if (currPosition != null)
+                    {
+                        itemSource = muaData.OrderBy(m => Geolocator.DistanceBetweenPlaces(
+                            currPosition.Longitude, currPosition.Latitude, m.LocationLon, m.LocationLat));
+                    }
+                    break;
+                case SearchSortType.LowestPrice:
+                    itemSource = muaData.OrderBy(m => m.PriceMin);
+                    break;
+                case SearchSortType.HighestPrice:
+                    itemSource = muaData.OrderByDescending(m => m.PriceMax);
+                    break;
+            }
+            muaList.ItemsSource = itemSource;
+        }
+
         private DataTemplate GetDataTemplate()
         {
             return new DataTemplate(() =>

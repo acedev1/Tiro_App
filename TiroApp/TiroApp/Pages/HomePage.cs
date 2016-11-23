@@ -98,7 +98,7 @@ namespace TiroApp.Pages
         {
             searchHeader = new SearchHeader();
             searchHeader.BackgroundColor = Color.White;
-            searchHeader.filterIcon.IsVisible = false;
+            searchHeader.sortIcon.IsVisible = false;
             searchHeader.filtersLayout.IsVisible = true;
             searchHeader.OnSearchClick += SearchButton_Clicked;
 

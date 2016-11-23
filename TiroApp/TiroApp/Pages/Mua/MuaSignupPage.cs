@@ -283,10 +283,10 @@ namespace TiroApp.Pages.Mua
                         {
                             currentCode = res.Result.Trim('"');
                             //TODO: temp
-                            Device.BeginInvokeOnMainThread(() =>
-                            {
-                                codeEntry.Text = currentCode;
-                            });
+                            //Device.BeginInvokeOnMainThread(() =>
+                            //{
+                            //    codeEntry.Text = currentCode;
+                            //});
                         }
                     });
                 }
