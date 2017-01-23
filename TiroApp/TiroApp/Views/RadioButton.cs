@@ -42,7 +42,7 @@ namespace TiroApp.Views
 
         private void OnTap(View v)
         {
-            if (IsChecked && isRadio)
+            if (!IsMultiChecker && IsChecked && isRadio)
             {
                 return;
             }
@@ -65,6 +65,8 @@ namespace TiroApp.Views
             //}
             _image.Source = ImageSource.FromResource(_isChecked ? imgChecked : imgUnchecked);
         }
+
+        public bool IsMultiChecker { get; set; }
 
         public bool IsChecked
         {

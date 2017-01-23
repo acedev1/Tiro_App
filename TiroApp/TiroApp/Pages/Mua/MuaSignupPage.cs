@@ -21,11 +21,13 @@ namespace TiroApp.Pages.Mua
         private StackLayout bottomLayout;
         private CustomLabel mainText;
 
-        private CustomEntry phoneEntry;
+        //private CustomEntry phoneEntry;
+        private PhoneNumberEntry phoneEntry;
         private CustomEntry codeEntry;
         private CustomEntry addressEntry;
         private CustomEntry emailEntry;
         private CustomEntry pswdEntry;
+        private CustomEntry pswdConfirmEntry;
         private CustomEntry fnameEntry;
         private CustomEntry lnameEntry;
         private CustomEntry instagramEntry;        
@@ -34,6 +36,9 @@ namespace TiroApp.Pages.Mua
         private string currentCode;
         private bool isEntryFocused = false;
         private RelativeLayout main;
+        private CustomEntry travelEntry;
+        private ButtonGroup tierGroup;
+        private ButtonGroup travelGroup;
 
         public MuaSignupPage(string businessName)
         {
@@ -107,13 +112,13 @@ namespace TiroApp.Pages.Mua
             bottomLayout.Spacing = 0;
             bottomLayout.BackgroundColor = Color.White;
 
-            phoneEntry = UIUtils.MakeEntry("Phone", UIUtils.FONT_SFUIDISPLAY_BOLD);
-            bottomLayout.Children.Add(phoneEntry);
+            fnameEntry = UIUtils.MakeEntry("First Name", UIUtils.FONT_SFUIDISPLAY_BOLD);
+            bottomLayout.Children.Add(fnameEntry);
             bottomLayout.Children.Add(UIUtils.MakeSeparator());
 
-            //addressEntry = UIUtils.MakeEntry("Location/Address", UIUtils.FONT_SFUIDISPLAY_BOLD);
-            //bottomLayout.Children.Add(addressEntry);
-            //bottomLayout.Children.Add(UIUtils.MakeSeparator());
+            lnameEntry = UIUtils.MakeEntry("Last Name", UIUtils.FONT_SFUIDISPLAY_BOLD);
+            bottomLayout.Children.Add(lnameEntry);
+            bottomLayout.Children.Add(UIUtils.MakeSeparator());            
 
             var addressACEntry = new AutoCompleteView();
             addressEntry = addressACEntry.EntryText;
@@ -130,6 +135,10 @@ namespace TiroApp.Pages.Mua
             var sh = new PlaceSearchHelper(addressACEntry);
             sh.OnSelected += (o, p) => { lastLocation = p; };
 
+            phoneEntry = new PhoneNumberEntry();
+            bottomLayout.Children.Add(phoneEntry);
+            bottomLayout.Children.Add(UIUtils.MakeSeparator());
+
             emailEntry = UIUtils.MakeEntry("Email", UIUtils.FONT_SFUIDISPLAY_BOLD);
             bottomLayout.Children.Add(emailEntry);
             bottomLayout.Children.Add(UIUtils.MakeSeparator());
@@ -139,12 +148,9 @@ namespace TiroApp.Pages.Mua
             bottomLayout.Children.Add(pswdEntry);
             bottomLayout.Children.Add(UIUtils.MakeSeparator());
 
-            fnameEntry = UIUtils.MakeEntry("First Name", UIUtils.FONT_SFUIDISPLAY_BOLD);
-            bottomLayout.Children.Add(fnameEntry);
-            bottomLayout.Children.Add(UIUtils.MakeSeparator());
-
-            lnameEntry = UIUtils.MakeEntry("Last Name", UIUtils.FONT_SFUIDISPLAY_BOLD);
-            bottomLayout.Children.Add(lnameEntry);
+            pswdConfirmEntry = UIUtils.MakeEntry("Confirm Password", UIUtils.FONT_SFUIDISPLAY_BOLD);
+            pswdConfirmEntry.IsPassword = true;
+            bottomLayout.Children.Add(pswdConfirmEntry);
             bottomLayout.Children.Add(UIUtils.MakeSeparator());
 
             var continueButton = UIUtils.MakeButton("CONTINUE", UIUtils.FONT_SFUIDISPLAY_REGULAR);
@@ -154,7 +160,7 @@ namespace TiroApp.Pages.Mua
 
             bottomLayout.ForceLayout();
             currentStep = 1;
-            MakeEntryVisibleWithKeybord(new Entry[] { phoneEntry, addressEntry, emailEntry, pswdEntry, lnameEntry, fnameEntry });
+            MakeEntryVisibleWithKeybord(new Entry[] { phoneEntry.NumberEntry, addressEntry, emailEntry, pswdEntry, pswdConfirmEntry, lnameEntry, fnameEntry });
         }
 
         private void BuildStep2()
@@ -174,8 +180,17 @@ namespace TiroApp.Pages.Mua
             };
             bottomLayout.Children.Add(label);
 
-            phoneEntry.Focused += (o, a) => { codeEntry.Focus(); };
-            bottomLayout.Children.Add(phoneEntry);
+            var phoneNumberLabel = new CustomLabel() {
+                Text = phoneEntry.PhoneNumber,
+                TextColor = Color.Black,
+                FontSize = 16,
+                FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR,
+                HorizontalTextAlignment = TextAlignment.Start,
+                VerticalTextAlignment = TextAlignment.Center,
+                Margin = new Thickness(20, 10, 20, 0),
+                HeightRequest = 70
+            };
+            bottomLayout.Children.Add(phoneNumberLabel);
             bottomLayout.Children.Add(UIUtils.MakeSeparator());
 
             codeEntry = UIUtils.MakeEntry("Confirmation code", UIUtils.FONT_SFUIDISPLAY_BOLD);
@@ -191,6 +206,68 @@ namespace TiroApp.Pages.Mua
         }
 
         private void BuildStep3()
+        {
+            currentStep = 3;
+            mainText.Text = "Tell us a little bit more \r\n about your bisness";
+            bottomLayout.Children.Clear();
+            var label = new CustomLabel()
+            {
+                Text = "What is your typical price range",
+                TextColor = Color.Black,
+                FontSize = 16,
+                FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR,
+                HorizontalTextAlignment = TextAlignment.Center,
+                VerticalTextAlignment = TextAlignment.Center,
+                Margin = new Thickness(20)
+            };
+            bottomLayout.Children.Add(label);
+            tierGroup = new ButtonGroup();
+            tierGroup.Buttons = new List<string> { "5K - 10K", "10K - 25K", "25K+" };
+            tierGroup.HorizontalOptions = LayoutOptions.Center;
+            tierGroup.Margin = new Thickness(0, 10, 0, 20);
+            bottomLayout.Children.Add(tierGroup);
+
+            var label2 = new CustomLabel()
+            {
+                Text = "Are you willing to travel to the customer's location?",
+                TextColor = Color.Black,
+                FontSize = 16,
+                FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR,
+                HorizontalTextAlignment = TextAlignment.Center,
+                VerticalTextAlignment = TextAlignment.Center,
+                Margin = new Thickness(20)
+            };
+            bottomLayout.Children.Add(label2);
+            travelGroup = new ButtonGroup();
+            travelGroup.Buttons = new List<string> { "Yes", "No" };
+            travelGroup.HorizontalOptions = LayoutOptions.Center;
+            travelGroup.Margin = new Thickness(0, 10, 0, 20);
+            bottomLayout.Children.Add(travelGroup);
+
+            var label3 = new CustomLabel()
+            {
+                Text = "How much will you charge to travel?",
+                TextColor = Color.Black,
+                FontSize = 16,
+                FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR,
+                HorizontalTextAlignment = TextAlignment.Center,
+                VerticalTextAlignment = TextAlignment.Center,
+                Margin = new Thickness(20)
+            };
+            bottomLayout.Children.Add(label3);
+            travelEntry = UIUtils.MakeEntry("Travel charge", UIUtils.FONT_SFUIDISPLAY_BOLD);
+            travelEntry.Keyboard = Keyboard.Numeric;
+            bottomLayout.Children.Add(travelEntry);
+            bottomLayout.Children.Add(UIUtils.MakeSeparator());
+
+            var continueButton = UIUtils.MakeButton("CONTINUE", UIUtils.FONT_SFUIDISPLAY_REGULAR);
+            continueButton.Clicked += OnContinue;
+            bottomLayout.Children.Add(continueButton);
+
+            bottomLayout.ForceLayout();
+        }
+
+        private void BuildStep4()
         {
             mainText.Text = "create a portfolio by \r\n linking to your instagram \r\n account";
             bottomLayout.Children.Clear();
@@ -234,7 +311,7 @@ namespace TiroApp.Pages.Mua
             bottomLayout.Children.Add(continueButton);
 
             bottomLayout.ForceLayout();
-            currentStep = 3;
+            currentStep = 4;
             MakeEntryVisibleWithKeybord(new Entry[] { instagramEntry });
         }
 
@@ -273,20 +350,26 @@ namespace TiroApp.Pages.Mua
         {
             if (currentStep == 1)
             {
-                bool valid = UIUtils.ValidateEntriesWithEmpty(new Entry[] { phoneEntry, addressEntry, emailEntry, pswdEntry, lnameEntry, fnameEntry }, this);
+                bool valid = UIUtils.ValidateEntriesWithEmpty(new Entry[] { phoneEntry.NumberEntry, addressEntry, emailEntry, pswdEntry, pswdConfirmEntry, lnameEntry, fnameEntry }, this);
                 if (valid)
                 {
+                    if (pswdEntry.Text != pswdConfirmEntry.Text)
+                    {
+                        UIUtils.ShowMessage("Confirm password is not valid", this);
+                        return;
+                    }
                     BuildStep2();
-                    DataGate.VerifyPhoneNumber(phoneEntry.Text, (res) =>
+                    DataGate.VerifyPhoneNumber(phoneEntry.PhoneNumber, (res) =>
                     {
                         if (res.Code == ResponseCode.OK)
                         {
                             currentCode = res.Result.Trim('"');
-                            //TODO: temp
-                            //Device.BeginInvokeOnMainThread(() =>
-                            //{
-                            //    codeEntry.Text = currentCode;
-                            //});
+#if DEBUG
+                            Device.BeginInvokeOnMainThread(() =>
+                            {
+                                codeEntry.Text = currentCode;
+                            });
+#endif
                         }
                     });
                 }
@@ -301,6 +384,10 @@ namespace TiroApp.Pages.Mua
                 {
                     UIUtils.ShowMessage("Confirmation code is not valid", this);
                 }
+            }
+            else if (currentStep == 3)
+            {
+                BuildStep4();
             }
             else
             {
@@ -344,7 +431,12 @@ namespace TiroApp.Pages.Mua
                 data.Add("LocationLon", lastLocation.Longitude.ToString(Utils.EnCulture));
             }
             data.Add("Password", Ext.MD5.GetMd5String(pswdEntry.Text));
-            data.Add("Phone", phoneEntry.Text);
+            data.Add("Phone", phoneEntry.PhoneNumber);
+            data.Add("Tier", tierGroup.SelectedIndex + 1);
+            data.Add("IsTravelAvailable", travelGroup.SelectedIndex == 0);
+            int travelCharge = 0;
+            int.TryParse(travelEntry.Text, out travelCharge);
+            data.Add("TravelCharge", travelCharge);
             if (ipictures != null)
             {
                 data.Add("Pictures", ipictures);
@@ -356,15 +448,20 @@ namespace TiroApp.Pages.Mua
 
             DataGate.MuaSignupJson(data, (response) =>
             {
-                if (response.Code == ResponseCode.OK)
+                if (response.Code == ResponseCode.OK && !string.IsNullOrEmpty(response.Result))
                 {
-                    var jobj = Newtonsoft.Json.Linq.JObject.Parse(response.Result);
-                    if (jobj["Id"] != null)
+                    Newtonsoft.Json.Linq.JObject jobj = null;
+                    try
+                    {
+                        jobj = Newtonsoft.Json.Linq.JObject.Parse(response.Result);
+                    }
+                    catch { }
+                    if (jobj != null && jobj["Id"] != null)
                     {
                         var muaId = (string)jobj["Id"];
-                        GlobalStorage.Settings.MuaId = muaId;
-                        GlobalStorage.SaveAppSettings();
-                        Notification.CrossPushNotificationListener.RegisterPushNotification();
+                        //GlobalStorage.Settings.MuaId = muaId;
+                        //GlobalStorage.SaveAppSettings();
+                        //Notification.CrossPushNotificationListener.RegisterPushNotification();
                         if (this.photoFile != null)
                         {
                             DataGate.UploadImage(true, this.photoFile.Source, (imgr) =>
@@ -372,7 +469,7 @@ namespace TiroApp.Pages.Mua
                                 UIUtils.HideSpinner(this, spinner);
                                 Device.BeginInvokeOnMainThread(() =>
                                 {
-                                    Utils.ShowPageFirstInStack(this, new MuaHomePage());
+                                    Utils.ShowPageFirstInStack(this, new UnderReviewPage());
                                 });
                             });
                         }
@@ -381,17 +478,19 @@ namespace TiroApp.Pages.Mua
                             UIUtils.HideSpinner(this, spinner);
                             Device.BeginInvokeOnMainThread(() =>
                             {
-                                Utils.ShowPageFirstInStack(this, new MuaHomePage());
+                                Utils.ShowPageFirstInStack(this, new UnderReviewPage());
                             });
                         }
                     }
                     else
                     {
+                        UIUtils.HideSpinner(this, spinner);
                         UIUtils.ShowMessage("Signup failed. Try another email", this);
                     }
                 }
                 else
                 {
+                    UIUtils.HideSpinner(this, spinner);
                     UIUtils.ShowMessage("Login failed. Try later", this);
                 }
             });

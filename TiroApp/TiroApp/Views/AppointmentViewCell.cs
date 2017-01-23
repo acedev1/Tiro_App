@@ -12,6 +12,8 @@ namespace TiroApp.Views
     {
         private EventHandler OnConfirmClick;
         private EventHandler OnDeclineClick;
+        public EventHandler OnRescheduleClick;
+        public EventHandler OnCancelClick;
         private bool _isMua;
 
         public AppointmentViewCell(bool isMua = false)
@@ -25,6 +27,13 @@ namespace TiroApp.Views
             _isMua = true;
             this.OnDeclineClick = onDeclineClick;
             this.OnConfirmClick = onConfirmClick;
+        }
+
+        public AppointmentViewCell(bool isMua, EventHandler onRescheduleClick, EventHandler onCancelClick) : this()
+        {
+            _isMua = false;
+            this.OnRescheduleClick = onRescheduleClick;
+            this.OnCancelClick = onCancelClick;
         }
 
         public bool IsWithButtons { get; set; }
@@ -132,14 +141,32 @@ namespace TiroApp.Views
                 var btn2 = UIUtils.MakeButton("CONFIRM", UIUtils.FONT_SFUIDISPLAY_MEDIUM);
                 btn2.SetBinding(UIUtils.TagProperty, "Id");
                 btn2.Clicked += (o, a) => { OnConfirmClick?.Invoke(o, a); };
-                var row4 = new StackLayout()
-                {
+                var row4 = new StackLayout() {
                     Orientation = StackOrientation.Horizontal,
                     HorizontalOptions = LayoutOptions.FillAndExpand,
                     Spacing = 0,
                     Children = { btn1, btn2 }
                 };
                 row4.SetBinding(VisualElement.IsVisibleProperty, "IsStatusNew");
+                l.Children.Add(row4);
+            }
+            else
+            {
+                var btn1 = UIUtils.MakeButton("RESCHEDULE", UIUtils.FONT_SFUIDISPLAY_MEDIUM);
+                btn1.TextColor = Props.ButtonColor;
+                btn1.BackgroundColor = Color.FromHex("F8F8F8");
+                btn1.SetBinding(UIUtils.TagProperty, "Id");
+                btn1.Clicked += (o, a) => { OnRescheduleClick?.Invoke(o, a); };
+                var btn2 = UIUtils.MakeButton("CANCEL", UIUtils.FONT_SFUIDISPLAY_MEDIUM);
+                btn2.SetBinding(UIUtils.TagProperty, "Id");
+                btn2.Clicked += (o, a) => { OnCancelClick?.Invoke(o, a); };
+                var row4 = new StackLayout() {
+                    Orientation = StackOrientation.Horizontal,
+                    HorizontalOptions = LayoutOptions.FillAndExpand,
+                    Spacing = 0,
+                    Children = { btn1, btn2 }
+                };
+                row4.SetBinding(VisualElement.IsVisibleProperty, "IsStatusNewAndNotPast");
                 l.Children.Add(row4);
             }
 
@@ -165,15 +192,34 @@ namespace TiroApp.Views
                 var overlay = new BoxView {
                     Color = Color.FromRgba(255, 255, 255, 124)
                 };
-                overlay.SetBinding(VisualElement.IsVisibleProperty, "IsStatusNew");
+                overlay.SetBinding(VisualElement.IsVisibleProperty, "IsOverlayed");
+                //overlay.HeightRequest = Device.OnPlatform(115, 120, 115);
 
-                AbsoluteLayout.SetLayoutFlags(overlay, AbsoluteLayoutFlags.All);
-                AbsoluteLayout.SetLayoutBounds(overlay, new Rectangle(0f, 0f, 1f, 1f));
+                //AbsoluteLayout.SetLayoutFlags(overlay, AbsoluteLayoutFlags.All);
+                ////AbsoluteLayout.SetLayoutFlags(overlay, AbsoluteLayoutFlags.SizeProportional);
+                //AbsoluteLayout.SetLayoutBounds(overlay, new Rectangle(0f, 0f, 1f, 0.65f));
+                var overlayHeight = Device.OnPlatform(111, 116, 111);
+                AbsoluteLayout.SetLayoutFlags(overlay, AbsoluteLayoutFlags.PositionProportional);
+                AbsoluteLayout.SetLayoutBounds(overlay, new Rectangle(0, 0, 1000, overlayHeight));
                 al.Children.Add(overlay);
 
                 AbsoluteLayout.SetLayoutFlags(overlayText, AbsoluteLayoutFlags.PositionProportional);
                 AbsoluteLayout.SetLayoutBounds(overlayText, new Rectangle(0.4f, 0.4f, AbsoluteLayout.AutoSize, AbsoluteLayout.AutoSize));
                 al.Children.Add(overlayText);
+
+                var overlayTextPayment = new CustomLabel();
+                overlayTextPayment.Text = "Make Payment to Secure \nBooking";
+                overlayTextPayment.FontFamily = UIUtils.FONT_SFUIDISPLAY_BOLD;
+                overlayTextPayment.FontSize = 16;
+                overlayTextPayment.TextColor = Props.ButtonInfoPageColor;
+                overlayTextPayment.HorizontalTextAlignment = TextAlignment.Center;
+                overlayTextPayment.HorizontalOptions = LayoutOptions.CenterAndExpand;
+                overlayTextPayment.Rotation = 350;
+                overlayTextPayment.SetBinding(VisualElement.IsVisibleProperty, "IsMakePayment");
+
+                AbsoluteLayout.SetLayoutFlags(overlayTextPayment, AbsoluteLayoutFlags.PositionProportional);
+                AbsoluteLayout.SetLayoutBounds(overlayTextPayment, new Rectangle(0.4f, 0.4f, AbsoluteLayout.AutoSize, AbsoluteLayout.AutoSize));
+                al.Children.Add(overlayTextPayment);
             }
             View = al;
         }

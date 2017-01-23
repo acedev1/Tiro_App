@@ -27,12 +27,12 @@ namespace TiroApp.Notification
             try
             {
                 int atype = (int)parameters["atype"];
-                if (atype == (int)AppointmentStatus.New && GlobalStorage.Settings.MuaId != null)
+                if (atype == (int)AppointmentStatus.New || atype == (int)AppointmentStatus.Paid)
                 {
                     if (GlobalStorage.Settings.MuaId == ((string)parameters["amua"]).ToLower())
                     {
                         parameters[PushNotificationKey.Data] = new JObject();
-                        parameters[PushNotificationKey.Data][PushNotificationKey.Message] = "New appointment";
+                        parameters[PushNotificationKey.Data][PushNotificationKey.Message] = parameters["aps"]["alert"];
                         showMessage = true;
                         var topPage = GetTopStackPage();
                         if (topPage is MuaHomePage)
@@ -46,8 +46,7 @@ namespace TiroApp.Notification
                     if (GlobalStorage.Settings.CustomerId == ((string)parameters["acustomer"]).ToLower())
                     {
                         parameters[PushNotificationKey.Data] = new JObject();
-                        parameters[PushNotificationKey.Data][PushNotificationKey.Message] =
-                            atype == (int)AppointmentStatus.Approved ? "Appointment confirmed" : "Appointment declined";
+                        parameters[PushNotificationKey.Data][PushNotificationKey.Message] = parameters["aps"]["alert"];
                         showMessage = true;
                         var topPage = GetTopStackPage();
                         if (topPage is CustomerAppointments)
@@ -57,10 +56,10 @@ namespace TiroApp.Notification
                     }
                 }
 
-                if (deviceType == DeviceType.iOS)
-                {
-                    UIUtils.ShowMessage((string)parameters["aps"]["alert"], App.Current.MainPage);
-                }
+                //if (deviceType == DeviceType.iOS)
+                //{
+                //    UIUtils.ShowMessage((string)parameters["aps"]["alert"], App.Current.MainPage);
+                //}
             }
             catch { }
         }

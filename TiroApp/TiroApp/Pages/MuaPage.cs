@@ -53,7 +53,10 @@ namespace TiroApp.Pages
             }));
 
             Uri imgUri = null;
-            Uri.TryCreate(mua.Images[muaBackgroundImageIndex], UriKind.Absolute, out imgUri);
+            if (!Uri.TryCreate(mua.DefaultPicture, UriKind.Absolute, out imgUri))
+            {
+                Uri.TryCreate(mua.Images[muaBackgroundImageIndex], UriKind.Absolute, out imgUri);
+            }
             muaBackground = new Image();
             muaBackground.BackgroundColor = Color.Black;
             muaBackground.Aspect = Aspect.AspectFill;
@@ -145,13 +148,6 @@ namespace TiroApp.Pages
 
         private void BuildServices()
         {
-            /*
-            listheaders - sfuidisplay-light
-            list - sfuidisplay-regular
-            counlabel - sfuidisplay-semibold
-            time - bebasneueregular
-            */
-
             if (order == null)
             {
                 order = new Order(mua);
@@ -325,7 +321,7 @@ namespace TiroApp.Pages
 
         private void BuildInfo()
         {
-            var map = mua.Map;
+            var map = mua.Location.Map;
 
             var artistCompanyInfo = new CustomLabel();
             artistCompanyInfo.Text = $"Artist at {bussinesName}";
@@ -341,13 +337,13 @@ namespace TiroApp.Pages
             categories.HorizontalOptions = LayoutOptions.Center;
 
             var address = new CustomLabel();
-            address.Text = mua.Address;
+            address.Text = mua.Location.Address;
             address.TextColor = Color.Gray;
             address.FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR;
             address.HorizontalOptions = LayoutOptions.Center;
             address.Margin = new Thickness(0, 10, 0, 10);
 
-            var loc = string.Format("{0},{1}", mua.Lat, mua.Lon);
+            var loc = string.Format("{0},{1}", mua.Location.Lat, mua.Location.Lon);
             map.GestureRecognizers.Add(new TapGestureRecognizer(v => {
                 switch (Device.OS)
                 {
@@ -445,7 +441,7 @@ namespace TiroApp.Pages
             var price = new CustomLabel();
             var length = service.Length;
             price.TextColor = Color.FromHex("CCCCCC");
-            price.Text = UIUtils.NIARA_SIGN + service.Price + " and up for " + length + " minutes";
+            price.Text = UIUtils.NIARA_SIGN + service.Price + " for " + length + " minutes";
             price.FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR;
             price.Margin = new Thickness(20, 0, 0, 0);
 
@@ -501,7 +497,8 @@ namespace TiroApp.Pages
         private void BuildServicesList()
         {
             servicesHolder.Children.Clear();
-            foreach (var category in categories)
+            var oCategories = categories.OrderBy(kv => kv.Key);
+            foreach (var category in oCategories)
             {
                 servicesHolder.Children.Add(new StackLayout
                 {
@@ -513,7 +510,8 @@ namespace TiroApp.Pages
                         }
                     }
                 });
-                foreach (var service in category.Value)
+                var oServices = category.Value.OrderBy(s => s.Name);
+                foreach (var service in oServices)
                 {
                     var services = order.Basket.Select(i => i.Service);
                     if (services.Contains(service))
@@ -565,7 +563,7 @@ namespace TiroApp.Pages
         {
             spinner = UIUtils.ShowSpinner(this);
             var id = mua.Id;
-            DataGate.MuaGetAvailability(id, DateTime.Today, DateTime.Today.AddMonths(1), true, result =>
+            DataGate.MuaGetAvailability(id, DateTime.Today, DateTime.Today.AddMonths(6), true, result =>
             {
                 if (result.Code == ResponseCode.OK)
                 {

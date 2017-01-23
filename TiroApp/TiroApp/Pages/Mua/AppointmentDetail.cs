@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
@@ -14,12 +15,17 @@ namespace TiroApp.Pages.Mua
         private RelativeLayout root;
         private Order _order;
         private const double ScaleCustomerImage = 0.8;
+        private StackLayout infoLayout;
 
         public AppointmentDetail(Order order)
         {
             _order = order;
             Utils.SetupPage(this);
             BuildLayout();
+            if (order.DateTime < DateTime.Now)
+            {
+                LoadReview();
+            }
         }
 
         private void BuildLayout()
@@ -73,7 +79,7 @@ namespace TiroApp.Pages.Mua
             note.Margin = new Thickness(20, 20, 20, 0);
             note.FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR;
 
-            var info = new StackLayout
+            infoLayout = new StackLayout
             {
                 Spacing = 0,
                 BackgroundColor = Color.White,
@@ -89,7 +95,7 @@ namespace TiroApp.Pages.Mua
             rl.Children.Add(name
                 , Constraint.RelativeToParent(p => (p.Width - Utils.GetControlSize(name).Width) / 2)
                 , Constraint.RelativeToParent(p => p.Width * (ScaleCustomerImage - 0.1)));
-            rl.Children.Add(info
+            rl.Children.Add(infoLayout
                 , Constraint.Constant(0)
                 , Constraint.RelativeToParent(p => p.Width * ScaleCustomerImage)
                 , Constraint.RelativeToParent(p => p.Width));
@@ -109,6 +115,71 @@ namespace TiroApp.Pages.Mua
                 , Constraint.RelativeToParent(p => p.Height));
 
             Content = root;
+        }
+
+        private void LoadReview()
+        {
+            DataGate.GetReview(GlobalStorage.Settings.MuaId, _order.Customer.Id, r =>
+            {
+                if (r.Code == ResponseCode.OK)
+                {
+                    try
+                    {
+                        var reviewArr = JArray.Parse(r.Result);
+                        Device.BeginInvokeOnMainThread(() =>
+                        {
+                            if (reviewArr.Count != 0)
+                            {
+                                BuildReviews(reviewArr);
+                            }
+                        });
+                    }
+                    catch { }
+                }
+            });
+        }
+
+        private void BuildReviews(JArray reviewArr)
+        {
+            infoLayout.Children.RemoveAt(infoLayout.Children.Count - 1);
+            infoLayout.Children.Add(UIUtils.MakeSeparator(true));
+            foreach (var review in reviewArr)
+            {
+                var reviewLabel = new CustomLabel()
+                {
+                    Text = "REVIEW:",
+                    FontSize = 22,
+                    TextColor = Color.Black,
+                    VerticalOptions = LayoutOptions.Center,
+                    FontFamily = UIUtils.FONT_BEBAS_REGULAR,
+                    HorizontalOptions = LayoutOptions.FillAndExpand
+                };
+                var rating = new RatingLayout()
+                {
+                    Rating = (int)review["Rating"],
+                    IsEditable = false,
+                    HeightRequest = 30,
+                    HorizontalOptions = LayoutOptions.End
+                };
+                var row1 = new StackLayout()
+                {
+                    Orientation = StackOrientation.Horizontal,
+                    HorizontalOptions = LayoutOptions.Fill,
+                    Margin = new Thickness(20, 20, 20, 10),
+                    Children = { reviewLabel, rating }
+                };
+                infoLayout.Children.Add(row1);
+                var reviewText = new CustomLabel()
+                {
+                    Text = (string)review["Description"],
+                    TextColor = Color.Black,
+                    FontSize = 14,
+                    HorizontalOptions = LayoutOptions.FillAndExpand,
+                    FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR,
+                    Margin = new Thickness(20, 0, 20, 20)
+                };
+                infoLayout.Children.Add(reviewText);
+            }
         }
     }
 }

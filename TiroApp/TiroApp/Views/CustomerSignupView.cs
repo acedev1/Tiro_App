@@ -12,7 +12,8 @@ namespace TiroApp.Views
     {
         private CustomEntry firstNameEntry;
         private CustomEntry lastNameEntry;
-        private CustomEntry phoneNumberEntry;
+        //private CustomEntry phoneNumberEntry;
+        private PhoneNumberEntry phoneNumberEntry;
         private CustomEntry emailEntry;        
         private CustomEntry pswdEntry;
         private CustomEntry codeEntry;
@@ -51,7 +52,7 @@ namespace TiroApp.Views
             this.Children.Add(lastNameEntry);
             this.Children.Add(UIUtils.MakeSeparator());
 
-            phoneNumberEntry = UIUtils.MakeEntry("Phone Number", UIUtils.FONT_SFUIDISPLAY_BOLD);
+            phoneNumberEntry = new PhoneNumberEntry();
             this.Children.Add(phoneNumberEntry);
             this.Children.Add(UIUtils.MakeSeparator());
 
@@ -74,8 +75,7 @@ namespace TiroApp.Views
         {
             this.Children.Clear();
 
-            var label = new CustomLabel()
-            {
+            var label = new CustomLabel() {
                 Text = "We have sent a confirmation code to the mobile number below. Please enter the confirmation code.",
                 TextColor = Color.Black,
                 FontSize = 16,
@@ -87,8 +87,17 @@ namespace TiroApp.Views
             };
             this.Children.Add(label);
 
-            phoneNumberEntry.Focused += (o, a) => { codeEntry.Focus(); };
-            this.Children.Add(phoneNumberEntry);
+            var phoneNumberLabel = new CustomLabel() {
+                Text = phoneNumberEntry.PhoneNumber,
+                TextColor = Color.Black,
+                FontSize = 16,
+                FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR,
+                HorizontalTextAlignment = TextAlignment.Start,
+                VerticalTextAlignment = TextAlignment.Center,
+                Margin = new Thickness(20, 10, 20, 0),
+                HeightRequest = 70
+            };
+            this.Children.Add(phoneNumberLabel);
             this.Children.Add(UIUtils.MakeSeparator());
 
             codeEntry = UIUtils.MakeEntry("Confirmation code", UIUtils.FONT_SFUIDISPLAY_BOLD);
@@ -105,22 +114,23 @@ namespace TiroApp.Views
         {
             if (currentStep == 1)
             {
-                bool valid = UIUtils.ValidateEntriesWithEmpty(new Entry[] { emailEntry, pswdEntry, firstNameEntry, lastNameEntry, phoneNumberEntry }, this.page);
+                bool valid = UIUtils.ValidateEntriesWithEmpty(new Entry[] { emailEntry, pswdEntry, firstNameEntry, lastNameEntry, phoneNumberEntry.NumberEntry }, this.page);
                 if (!valid)
                 {
                     return;
                 }
                 BuildStep2();
-                DataGate.VerifyPhoneNumber(phoneNumberEntry.Text, (res) =>
+                DataGate.VerifyPhoneNumber(phoneNumberEntry.PhoneNumber, (res) =>
                 {
                     if (res.Code == ResponseCode.OK)
                     {
                         currentCode = res.Result.Trim('"');
-                        //TODO: temp
-                        //Device.BeginInvokeOnMainThread(() =>
-                        //{
-                        //    codeEntry.Text = currentCode;
-                        //});
+#if DEBUG
+                        Device.BeginInvokeOnMainThread(() =>
+                        {
+                            codeEntry.Text = currentCode;
+                        });
+#endif
                     }
                 });
             }
@@ -138,7 +148,7 @@ namespace TiroApp.Views
                     { "FirstName", firstNameEntry.Text },
                     { "LastName", lastNameEntry.Text },
                     { "Password" , Ext.MD5.GetMd5String(pswdEntry.Text) },
-                    { "Phone", phoneNumberEntry.Text }
+                    { "Phone", phoneNumberEntry.PhoneNumber }
                 };
                 spinner = UIUtils.ShowSpinner((ContentPage)this.page);
                 DataGate.CustomerSignupJson(sendData, (data) =>

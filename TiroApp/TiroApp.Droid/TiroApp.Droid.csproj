@@ -44,7 +44,7 @@
     <EnableLLVM>False</EnableLLVM>
     <AndroidEnableMultiDex>False</AndroidEnableMultiDex>
     <EnableProguard>False</EnableProguard>
-    <JavaMaximumHeapSize>1G</JavaMaximumHeapSize>
+    <JavaMaximumHeapSize>800m</JavaMaximumHeapSize>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -190,6 +190,7 @@
     <Compile Include="MainActivity.cs" />
     <Compile Include="Renderers\CalendarViewRenderer.cs" />
     <Compile Include="Renderers\CustomLabelRenderer.cs" />
+    <Compile Include="Renderers\CustomPickerRenderer.cs" />
     <Compile Include="Renderers\CustomTimePickerRenderer.cs" />
     <Compile Include="Resources\Resource.Designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

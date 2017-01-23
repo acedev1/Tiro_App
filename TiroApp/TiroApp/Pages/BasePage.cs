@@ -34,7 +34,7 @@ namespace TiroApp.Pages
         protected virtual IList<View> GetBottomItems()
         {
             List<View> list = new List<View>();
-            list.Add(GetMenuItem("List Your Business", "wallet", (v) => { }));
+            list.Add(GetMenuItem("List Your Business", "wallet", (v) => { ShowPage(typeof(Pages.Mua.MuaLoginPage)); }));
             if (!string.IsNullOrEmpty(GlobalStorage.Settings.CustomerId))
             {
                 list.Add(GetMenuItem("Logout", "muah_logout", v =>
@@ -91,7 +91,7 @@ namespace TiroApp.Pages
             var sideMenu = new RelativeLayout();
             sideMenu.WidthRequest = 290;
             sideMenu.BackgroundColor = Color.FromHex("#352e4f");
-            sideMenu.Children.Add(topMenu, Constraint.Constant(0), Constraint.Constant(0));
+            sideMenu.Children.Add(topMenu, Constraint.Constant(0), Constraint.Constant(0), Constraint.Constant(sideMenu.WidthRequest));
             sideMenu.Children.Add(bottomMenu
                 , Constraint.RelativeToParent((p) =>
                 {
@@ -197,7 +197,8 @@ namespace TiroApp.Pages
             var layout = new StackLayout
             {
                 Orientation = StackOrientation.Horizontal,
-                Margin = new Thickness(70, 20, 10, 20),
+                Padding = new Thickness(70, 20, 10, 20),
+                HorizontalOptions = LayoutOptions.Fill,
                 Children =
                 {
                     itemImage,
@@ -205,10 +206,10 @@ namespace TiroApp.Pages
                 }
             };
 
-            itemName.GestureRecognizers.Add(new TapGestureRecognizer((v) =>
+            layout.GestureRecognizers.Add(new TapGestureRecognizer((v) =>
             {
                 itemName.FontFamily = UIUtils.FONT_SFUIDISPLAY_HEAVY;
-                Utils.StartTimer(TimeSpan.FromMilliseconds(600), () =>
+                Utils.StartTimer(TimeSpan.FromMilliseconds(500), () =>
                 {
                     itemName.FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR;
                     menuLayout.IsVisible = false;

@@ -12,7 +12,7 @@ namespace TiroApp.Model
 {
     public class InstagramHelper
     {
-        const string CLIENT_ID = "e3ec17aebc6a4cd69ba012277ca2b88e";
+        const string CLIENT_ID = "e3ec17aebc6a4cd69ba012277ca2b88e";// "742adcaf27074f9996b3848373f1e09f";//
         public const string REDIRECT_URI = "http://tiro.flexible-solutions.com.ua";
 
         private string username;
@@ -86,9 +86,17 @@ namespace TiroApp.Model
                     var sb = new StringBuilder();
                     foreach (var item in (JArray)data["data"])
                     {
-                        var img = (string)item["images"]["standard_resolution"]["url"];
-                        sb.Append(img);
-                        sb.Append(",");
+                        try
+                        {
+                            var countOfTag = item["tags"].Where(t => ((string)t) == "tiro" || ((string)t) == "tirobeauty").Count();
+                            if (countOfTag != 0)
+                            {
+                                var img = (string)item["images"]["standard_resolution"]["url"];
+                                sb.Append(img);
+                                sb.Append(",");
+                            }
+                        }
+                        catch { }
                     }
                     sb.Length--;
                     OnImagesLoad?.Invoke(this, sb.ToString());

@@ -34,7 +34,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>com.fxsl.tiro</string>
 	<key>CFBundleVersion</key>
-	<string>1.0</string>
+	<string>1.0.2</string>
 	<key>CFBundleIconFiles</key>
 	<array>
 		<string>Icon-72@2x.png</string>
@@ -57,10 +57,22 @@
 		<string>Icon-Small@2x.png</string>
 	</array>
 	<key>CFBundleShortVersionString</key>
-	<string></string>
+	<string>1.0</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>UIMainStoryboardFile</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile~ipad</key>
+	<string>LaunchScreen</string>
+	<key>UIRequiresFullScreen</key>
+	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to the photo library.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires access to the camera</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>You are about to use location!</string>
 </dict>
 </plist>

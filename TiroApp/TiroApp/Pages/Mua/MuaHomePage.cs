@@ -66,8 +66,8 @@ namespace TiroApp.Pages.Mua
             tabView.OnIndexChange += OnTabChange;
             contentLayout.Children.Add(tabView);
 
-            listView = new ListView();
-            listView.ItemTemplate = new DataTemplate(() => new AppointmentViewCell(OnDeclineClick, OnConfirmClick));//GetDataTemplate();
+            listView = new ListView(ListViewCachingStrategy.RecycleElement);
+            listView.ItemTemplate = new DataTemplate(() => new AppointmentViewCell(OnDeclineClick, OnConfirmClick));
             listView.SeparatorVisibility = SeparatorVisibility.None;
             listView.ItemTapped += ItemSelected;
             contentLayout.Children.Add(listView);
@@ -131,30 +131,34 @@ namespace TiroApp.Pages.Mua
         private void OnTabChange(object sender, int index)
         {
             currentTabIndex = index;
-            if (currentTabIndex == 0)
+            try
             {
-                var dataFiltered = appData.Where(o => ((int)o["Status"] == (int)AppointmentStatus.New));
-                var dataConverted = dataFiltered.Select(o => new AppointmentItem((JObject)o)).OrderByDescending(a => a.DateDT);
-                listView.RowHeight = Device.OnPlatform(170, 180, 170);
-                listView.ItemsSource = null;
-                listView.ItemsSource = dataConverted;
+                if (currentTabIndex == 0)
+                {
+                    var dataFiltered = appData.Where(o => ((int)o["Status"] == (int)AppointmentStatus.New));
+                    var dataConverted = dataFiltered.Select(o => new AppointmentItem((JObject)o)).OrderByDescending(a => a.DateDT);
+                    listView.RowHeight = Device.OnPlatform(170, 180, 170);
+                    listView.ItemsSource = null;
+                    listView.ItemsSource = dataConverted;
+                }
+                else if (currentTabIndex == 1)
+                {
+                    var dataFiltered = appData.Where(o => ((int)o["Status"] != (int)AppointmentStatus.New && (DateTime)o["Time"] > DateTime.Now));
+                    var dataConverted = dataFiltered.Select(o => new AppointmentItem((JObject)o)).OrderByDescending(a => a.DateDT);
+                    listView.RowHeight = Device.OnPlatform(115, 120, 115);
+                    listView.ItemsSource = null;
+                    listView.ItemsSource = dataConverted;
+                }
+                else if (currentTabIndex == 2)
+                {
+                    var dataFiltered = appData.Where(o => ((int)o["Status"] != (int)AppointmentStatus.New && (DateTime)o["Time"] < DateTime.Now));
+                    var dataConverted = dataFiltered.Select(o => new AppointmentItem((JObject)o)).OrderByDescending(a => a.DateDT);
+                    listView.RowHeight = Device.OnPlatform(115, 120, 115);
+                    listView.ItemsSource = null;
+                    listView.ItemsSource = dataConverted;
+                }
             }
-            else if (currentTabIndex == 1)
-            {
-                var dataFiltered = appData.Where(o => ((int)o["Status"] != (int)AppointmentStatus.New && (DateTime)o["Time"] > DateTime.Now));
-                var dataConverted = dataFiltered.Select(o => new AppointmentItem((JObject)o)).OrderByDescending(a => a.DateDT);
-                listView.RowHeight = Device.OnPlatform(115, 120, 115);
-                listView.ItemsSource = null;
-                listView.ItemsSource = dataConverted;
-            }
-            else if (currentTabIndex == 2)
-            {
-                var dataFiltered = appData.Where(o => ((int)o["Status"] != (int)AppointmentStatus.New && (DateTime)o["Time"] < DateTime.Now));
-                var dataConverted = dataFiltered.Select(o => new AppointmentItem((JObject)o)).OrderByDescending(a => a.DateDT);
-                listView.RowHeight = Device.OnPlatform(115, 120, 115);
-                listView.ItemsSource = null;
-                listView.ItemsSource = dataConverted;
-            }
+            catch { }
         }
 
         private void OnDeclineClick(object sender, EventArgs arg)

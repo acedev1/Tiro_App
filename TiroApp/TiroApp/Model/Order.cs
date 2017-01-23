@@ -5,11 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TiroApp.Pages;
+using Xamarin.Forms;
 
 namespace TiroApp.Model
 {
     public class Order
     {
+        public const int DISCOUNT_TYPE_PERCENT = 1;
+        public const int DISCOUNT_TYPE_FIXED = 2;
+
         private bool _isForMua;
         public Order(JObject jObj, bool isForMua = false)
         {
@@ -20,6 +24,7 @@ namespace TiroApp.Model
         {
             Mua = mua;
         }
+        public bool IsUpdate { get; set; } = false;
         public string MuaAddress { get; private set; }
         public Customer Customer { get; private set; }
         public MuaArtist Mua { get; private set; }
@@ -35,12 +40,19 @@ namespace TiroApp.Model
         public AppointmentStatus Status { get; set; }
         public string AppointmentId { get; set; }
         public bool IsFree { get; set; }
+        public string DiscountId { get; set; }
+        public Location Location { get; set; }
+        public Discount Discount { get; set; }
 
         private void Init(JObject jObj)
         {
             if (_isForMua)
             {
                 Customer = new Customer(jObj);
+                if (jObj["CustomerId"] != null)
+                {
+                    Customer.Id = (string)jObj["CustomerId"];
+                }
                 MuaAddress = (string)jObj["MuaAddress"];
             }
             else
@@ -55,6 +67,25 @@ namespace TiroApp.Model
             foreach (JObject service in (JArray)jObj["Services"])
             {
                 Basket.Add(new OrderItem(new Service(service), (int)service["Count"]));
+            }
+            var discount = jObj["Discount"];
+            if (discount != null)
+            {
+                Discount = new Discount(discount as JObject);
+            }
+            var location = jObj["Location"];
+            if (location != null)
+            {
+                Location = new Location((location as JObject), true, true);
+            }
+            else
+            {
+                Location = new Location {
+                    Address = (string)jObj["MuaAddress"],
+                    Lat = (double)jObj["MuaLocationLat"],
+                    Lon = (double)jObj["MuaLocationLon"]
+                };
+                Location.MapInit();
             }
         }
     }
@@ -74,6 +105,38 @@ namespace TiroApp.Model
             {
                 return Service.Price * Count;
             }
+        }
+    }
+
+    public class Discount
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public int Type { get; set; }
+        public DateTime ExpireDate { get; set; }
+        public ImageSource Image { get; set; }
+        public double Value { get; set; }
+
+        public Discount(JObject jObj)
+        {
+            Init(jObj);
+        }
+
+        private void Init(JObject jObj)
+        {
+            var test = jObj.ToString();
+            Id = (string)jObj["Id"];
+            Name = (string)jObj["Name"];
+            Type = (int)jObj["Type"];
+            ExpireDate = (DateTime)jObj["ExpireDate"];
+            var imageUri = jObj["Image"];
+            if (imageUri != null)
+            {
+                UriImageSource imgs = (UriImageSource)ImageSource.FromUri(new Uri((string)imageUri));
+                imgs.CachingEnabled = false;
+                Image = imgs;
+            }
+            Value = (double)jObj["Value"];
         }
     }
 }

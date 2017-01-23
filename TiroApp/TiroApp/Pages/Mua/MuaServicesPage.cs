@@ -12,7 +12,8 @@ namespace TiroApp.Pages.Mua
     public class MuaServicesPage : ContentPage
     {
         private List<Service> serviceList = new List<Service>();
-        private ListView list;
+        private StackLayout servicesHolder;
+        //private ListView list;
 
         public MuaServicesPage()
         {
@@ -38,12 +39,126 @@ namespace TiroApp.Pages.Mua
                     }
                     Device.BeginInvokeOnMainThread(() =>
                     {
-                        list.ItemsSource = null;
-                        list.ItemsSource = serviceList;
+                        BuildServicesList();
                     });
                 }
                 UIUtils.HideSpinner(this, spinner);
             });
+        }
+
+        private void BuildServicesList()
+        {
+            var categories = new Dictionary<string, List<Service>>();
+            foreach (var service in serviceList)
+            {
+                var name = service.Category;
+                if (categories.ContainsKey(name))
+                {
+                    categories[name].Add(service);
+                }
+                else
+                {
+                    categories.Add(name, new List<Service> { service });
+                }
+            }
+
+            servicesHolder.Children.Clear();
+            var oCategories = categories.OrderBy(kv => kv.Key);
+            foreach (var category in oCategories)
+            {
+                servicesHolder.Children.Add(new StackLayout
+                {
+                    BackgroundColor = Props.GrayColor,
+                    Padding = new Thickness(0, 5, 0, 5),
+                    Spacing = 0,
+                    Children = {
+                        new CustomLabel {
+                            Text = category.Key,
+                            HorizontalOptions = LayoutOptions.CenterAndExpand,
+                            TextColor = Color.Gray,
+                            FontFamily = UIUtils.FONT_SFUIDISPLAY_LIGHT
+                        }
+                    }
+                });
+                var oServices = category.Value.OrderBy(s => s.Name);
+                foreach (var service in oServices)
+                {
+                    servicesHolder.Children.Add(MakeServiceRow(service));
+                }
+            }
+        }
+
+        private StackLayout MakeServiceRow(Service service)
+        {
+            var name = new CustomLabel();
+            name.Text = service.Name;
+            name.Margin = new Thickness(20, 10, 0, 0);
+            name.TextColor = Color.Black;
+            name.FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR;
+            name.FontSize = 16;
+
+            var price = new CustomLabel();
+            var length = service.Length;
+            price.TextColor = Color.FromHex("CCCCCC");
+            price.Text = UIUtils.NIARA_SIGN + service.Price + " and up for " + length + " minutes";
+            price.FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR;
+            price.Margin = new Thickness(20, 0, 0, 0);            
+
+            var editButton = UIUtils.MakeButton("Edit", UIUtils.FONT_SFUIDISPLAY_REGULAR);
+            var deleteButton = UIUtils.MakeButton("Delete", UIUtils.FONT_SFUIDISPLAY_REGULAR);
+            editButton.BackgroundColor = Color.FromHex("C8C7CD");
+            editButton.WidthRequest = 90;            
+            deleteButton.WidthRequest = 100;
+            editButton.SetValue(UIUtils.TagProperty, service.Id);
+            deleteButton.SetValue(UIUtils.TagProperty, service.Id);
+            editButton.Clicked += OnEditClick;
+            deleteButton.Clicked += OnDeleteClick;
+
+            var info = new StackLayout
+            {
+                BackgroundColor = Color.White,
+                HeightRequest = editButton.HeightRequest,
+                Children = { name, price }
+            };
+
+            var infoLayout = new RelativeLayout();
+            infoLayout.Children.Add(deleteButton, Constraint.RelativeToParent(p => p.Width - deleteButton.WidthRequest));
+            infoLayout.Children.Add(editButton, Constraint.RelativeToParent(p => p.Width - deleteButton.WidthRequest - editButton.WidthRequest));
+            infoLayout.Children.Add(info, Constraint.Constant(0), Constraint.Constant(0), Constraint.RelativeToParent(p => p.Width));
+
+            double panDX = 0;
+            var pan = new PanGestureRecognizer();
+            pan.PanUpdated += (o, e) =>
+            {
+                switch (e.StatusType)
+                {
+                    case GestureStatus.Started:
+                        panDX = 0;
+                        break;
+                    case GestureStatus.Running:
+                        panDX = e.TotalX;
+                        break;
+                    case GestureStatus.Completed:
+                        if (panDX < 0)
+                        {
+                            info.TranslateTo(-(editButton.WidthRequest + deleteButton.WidthRequest), 0);
+                        }
+                        else
+                        {
+                            info.TranslateTo(0, 0);
+                        }
+                        break;
+                }
+            };
+            info.GestureRecognizers.Add(pan);
+
+            var line = UIUtils.MakeSeparator(true);
+            var layout = new StackLayout
+            {
+                Spacing = 0,
+                Children = { infoLayout, line }
+            };
+            return layout;
         }
 
         private void BuildLayout()
@@ -58,23 +173,20 @@ namespace TiroApp.Pages.Mua
 
             var header = UIUtils.MakeHeader(this, "My Services");
 
-            var addButton = UIUtils.MakeButton("ADD SERVICE", UIUtils.FONT_BEBAS_REGULAR);
+            var addButton = UIUtils.MakeButton("ADD A SERVICE +", UIUtils.FONT_BEBAS_REGULAR);
             addButton.VerticalOptions = LayoutOptions.EndAndExpand;
             addButton.Clicked += AddButton_Clicked;
-
-            list = new ListView();
-            list.RowHeight = Device.OnPlatform(140, 140, 100);
-            list.SeparatorColor = Color.Transparent;
-            list.SeparatorVisibility = SeparatorVisibility.None;
-            list.ItemTemplate = new DataTemplate(() => new ServiceViewCell(OnEditClick, OnDeleteClick));
-            list.VerticalOptions = LayoutOptions.FillAndExpand;
+            
+            servicesHolder = new StackLayout();
+            servicesHolder.Spacing = 0;
+            var scrollView = new ScrollView();
+            scrollView.Content = servicesHolder;            
 
             main.Children.Add(header);
             main.Children.Add(UIUtils.MakeSeparator(true));
-            main.Children.Add(list);
             main.Children.Add(addButton);
-
-            list.HeightRequest = App.ScreenHeight - Utils.GetControlSize(header).Height - Utils.GetControlSize(addButton).Height - 1;
+            main.Children.Add(scrollView);
+            scrollView.HeightRequest = App.ScreenHeight - Utils.GetControlSize(header).Height - Utils.GetControlSize(addButton).Height - 1;
             main.ForceLayout();
         }
 

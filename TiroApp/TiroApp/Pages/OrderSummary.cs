@@ -29,6 +29,13 @@ namespace TiroApp.Pages
         private TabView tabView;
         private ContentView tabViewContent;
         private StackLayout main;
+        private CustomLabel discountPrice;
+        private CustomEntry discountNameEntry;
+        private StackLayout discountRow1;
+        private StackLayout discountLayout;
+        private CustomLabel totalPrice;
+        private double travelCharge = 0;
+        private ActivityIndicator spinner;
 
         public OrderSummary(Order order, bool isInfo = false)
         {
@@ -36,6 +43,10 @@ namespace TiroApp.Pages
             _order = order;
             _isNeedCardPay = _isInfo && _order.Status == AppointmentStatus.Approved && _order.PaymentType == PaymentType.Card;
             Utils.SetupPage(this);
+            if (_order.Location != null)
+            {
+                travelCharge = _order.Mua.TravelCharge;
+            }
             BuildLayout();
             //if (isInfo)
             //{
@@ -64,6 +75,7 @@ namespace TiroApp.Pages
             }
             var serviceSeparator = UIUtils.MakeSeparator();
             servicesInfo.Children.Add(serviceSeparator);
+
             var subtotal = new CustomLabel {
                 HorizontalOptions = LayoutOptions.StartAndExpand,
                 VerticalOptions = LayoutOptions.Center,
@@ -72,20 +84,32 @@ namespace TiroApp.Pages
                 FontSize = 16,
                 FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR
             };
-            var totalPrice = new CustomLabel {
+            totalPrice = new CustomLabel {
                 HorizontalOptions = LayoutOptions.EndAndExpand,
                 VerticalOptions = LayoutOptions.Center,
-                Text = $"{UIUtils.NIARA_SIGN}{_order.TotalPrice}",
+                Text = $"{UIUtils.NIARA_SIGN}{_order.TotalPrice + travelCharge}",
                 TextColor = Color.Black,
                 FontSize = 16,
                 FontFamily = UIUtils.FONT_SFUIDISPLAY_SEMIBOLD
             };
-            var total =  new StackLayout {
+            var total = new StackLayout {
                 Orientation = StackOrientation.Horizontal,
                 Margin = new Thickness(20, 10, 20, 10),
                 Children = { subtotal, totalPrice }
             };
+
+            servicesInfo.Children.Add(MakeDiscountInfo());
+
+            if (_order.Location != null)
+            {
+                servicesInfo.Children.Add(MakeTravelChargeInfo());
+            }
+
             servicesInfo.Children.Add(total);
+
+            #region discount
+            discountLayout = MakeDiscountEntry();
+            #endregion
 
             separatorDate = UIUtils.MakeSeparator(true);
 
@@ -101,15 +125,15 @@ namespace TiroApp.Pages
             var separatorAddress = UIUtils.MakeSeparator(true);
 
             var address = new CustomLabel {
-                Text = _order.Mua.Address,
+                Text = _order.Location != null ? _order.Location.Address : _order.Mua.Location.Address,
                 TextColor = Color.Gray,
                 FontFamily = UIUtils.FONT_SFUIDISPLAY_LIGHT,
                 FontSize = 14,
                 Margin = new Thickness(20, 10, 20, 10)
             };
 
-            var map = _order.Mua.Map;
-            var loc = string.Format("{0},{1}", _order.Mua.Lat, _order.Mua.Lon);
+            var map = _order.Mua.Location.Map;
+            var loc = string.Format("{0},{1}", _order.Mua.Location.Lat, _order.Mua.Location.Lon);
             map.GestureRecognizers.Add(new TapGestureRecognizer(v => {
                 switch (Device.OS)
                 {
@@ -132,10 +156,12 @@ namespace TiroApp.Pages
             info = new StackLayout {
                 Spacing = 0,
                 BackgroundColor = Color.White,
-                Children = { muaHeader, muaHeaderSeparator, servicesInfo, separatorDate, dateTime, separatorAddress, addressHolder }
+                Children = { muaHeader, muaHeaderSeparator, servicesInfo, discountLayout, separatorDate, dateTime, separatorAddress, addressHolder }
             };
             var scrollView = new ScrollView { Content = info };
-            
+
+            var cancellationNotice = MakeCancellationNotice();
+
             continueButton = UIUtils.MakeButton("BOOK NOW", UIUtils.FONT_SFUIDISPLAY_MEDIUM);
             if (_isInfo)
             {
@@ -154,7 +180,7 @@ namespace TiroApp.Pages
             main = new StackLayout {
                 Spacing = 0,
                 BackgroundColor = Color.White,
-                Children = { header, separator, scrollView, continueButton }
+                Children = { header, separator, scrollView, cancellationNotice, continueButton }
             };
 
             root = new RelativeLayout();
@@ -163,6 +189,46 @@ namespace TiroApp.Pages
                 , Constraint.RelativeToParent(p => p.Height));
 
             Content = root;
+        }
+
+        private void OnDiscountButtonClicked(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(discountNameEntry.Text))
+            {
+                discountRow1.IsVisible = false;
+                _order.DiscountId = null;
+                return;
+            }
+            var spinner = UIUtils.ShowSpinner(this);
+            var customerId = GlobalStorage.Settings.CustomerId != null ? GlobalStorage.Settings.CustomerId : string.Empty;
+            DataGate.GetDiscount(discountNameEntry.Text, customerId, r =>
+            {
+                if (r.Code == ResponseCode.OK)
+                {
+                    try
+                    {
+                        var jObj = JObject.Parse(r.Result);
+                        _order.DiscountId = (string)jObj["Id"];
+                        var type = (int)jObj["Type"];
+                        var discountValue = (double)jObj["Value"];
+                        if (type == Order.DISCOUNT_TYPE_PERCENT)
+                        {
+                            discountValue = _order.TotalPrice * discountValue / 100f;
+                        }
+                        Device.BeginInvokeOnMainThread(() =>
+                        {
+                            discountPrice.Text = UIUtils.NIARA_SIGN + discountValue;
+                            discountRow1.IsVisible = true;
+                            totalPrice.Text = $"{UIUtils.NIARA_SIGN}{_order.TotalPrice + travelCharge - discountValue}";
+                        });
+                    }
+                    catch
+                    {
+                        UIUtils.ShowMessage("Discount is not valid", this);
+                    }
+                }
+                UIUtils.HideSpinner(this, spinner);
+            });
         }
 
         private void OnTabChange(object sender, int e)
@@ -316,6 +382,137 @@ namespace TiroApp.Pages
             };
         }
 
+        private StackLayout MakeTravelChargeInfo()
+        {
+            var info = new CustomLabel {
+                HorizontalOptions = LayoutOptions.StartAndExpand,
+                VerticalOptions = LayoutOptions.Center,
+                Text = "Travel charge",
+                TextColor = Color.Black,
+                FontSize = 16,
+                FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR
+            };
+            var value = new CustomLabel {
+                HorizontalOptions = LayoutOptions.EndAndExpand,
+                VerticalOptions = LayoutOptions.Center,
+                Text = $"{UIUtils.NIARA_SIGN}{_order.Mua.TravelCharge}",
+                TextColor = Color.Black,
+                FontSize = 16,
+                FontFamily = UIUtils.FONT_SFUIDISPLAY_SEMIBOLD
+            };
+            return new StackLayout {
+                Orientation = StackOrientation.Horizontal,
+                Margin = new Thickness(20, 10, 20, 10),
+                Children = { info, value }
+            };
+        }
+
+        private StackLayout MakeDiscountInfo()
+        {
+            var discountLabel = new CustomLabel
+            {
+                HorizontalOptions = LayoutOptions.StartAndExpand,
+                VerticalOptions = LayoutOptions.Center,
+                Text = "Dicsount",
+                TextColor = Props.ButtonColor,
+                FontSize = 16,
+                FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR
+            };
+            discountPrice = new CustomLabel
+            {
+                HorizontalOptions = LayoutOptions.EndAndExpand,
+                VerticalOptions = LayoutOptions.Center,
+                Text = $"-{UIUtils.NIARA_SIGN}50",
+                TextColor = Props.ButtonColor,
+                FontSize = 16,
+                FontFamily = UIUtils.FONT_SFUIDISPLAY_SEMIBOLD
+            };
+            discountRow1 = new StackLayout {
+                Orientation = StackOrientation.Horizontal,
+                Margin = new Thickness(20, 10, 20, 0),
+                IsVisible = false,
+                Children = { discountLabel, discountPrice }
+            };
+            if (_isInfo && _order.Discount != null)
+            {
+                discountRow1.IsVisible = true;
+                var discountValue = _order.Discount.Value;
+                if (_order.Discount.Type == Order.DISCOUNT_TYPE_PERCENT)
+                {
+                    discountValue = _order.TotalPrice * discountValue / 100f;
+                }
+                discountPrice.Text = UIUtils.NIARA_SIGN + discountValue;
+                totalPrice.Text = $"{UIUtils.NIARA_SIGN}{_order.TotalPrice + travelCharge - discountValue}";
+            }
+            return discountRow1;
+        }
+
+        private StackLayout MakeDiscountEntry()
+        { 
+            if (!_isInfo)
+            {
+                discountNameEntry = new CustomEntry()
+                {
+                    HorizontalOptions = LayoutOptions.FillAndExpand,
+                    VerticalOptions = LayoutOptions.Center,
+                    Placeholder = "Enter Discount Code",
+                    PlaceholderColor = Props.GrayColor,
+                    TextColor = Color.Black,
+                    FontSize = 16,
+                    FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR
+                };
+                var discountButton = new Button()
+                {
+                    Text = "APPLY",
+                    FontFamily = UIUtils.FONT_SFUIDISPLAY_MEDIUM,
+                    HeightRequest = 35,
+                    FontSize = 15,
+                    HorizontalOptions = LayoutOptions.End,
+                    BackgroundColor = Props.ButtonColor,
+                    BorderRadius = Props.ButtonBorderRadius,
+                    TextColor = Color.White
+                };
+                discountButton.Clicked += OnDiscountButtonClicked;
+                var discountRow2 = new StackLayout
+                {
+                    Orientation = StackOrientation.Horizontal,
+                    Margin = new Thickness(20, 0, 20, 0),
+                    IsVisible = true,
+                    Children = { discountNameEntry, discountButton }
+                };
+                return discountRow2;
+            }
+            else
+            {
+                return new StackLayout { Spacing = 0 };
+            }
+        }
+
+        private StackLayout MakeCancellationNotice()
+        {
+            var img = new Image {
+                Source = ImageSource.FromResource("TiroApp.Images.tiro_info_icon.png"),
+                HeightRequest = 13,
+                WidthRequest = 13,
+                VerticalOptions = LayoutOptions.Start,
+                Margin = new Thickness(3)
+            };
+            var label = new Label {
+                Text = $"Cancellations should be made within 48 hours of booking confirmation.{Environment.NewLine}" + 
+                    "A ₦5,000 cancellation fee will be applied if made after 48 hours.",
+                FontSize = 9,
+                FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR,
+                TextColor = Color.Black,
+                Margin = new Thickness(0, 3, 3, 8)
+            };
+            return new StackLayout {
+                Orientation = StackOrientation.Horizontal,
+                BackgroundColor = Color.FromHex("#FFFFA5"),
+                Margin = new Thickness(5),
+                Children = { img, label }
+            };
+        }
+
         private void OnContinueClick(object sender, EventArgs e)
         {
             if (_isNeedCardPay)
@@ -347,6 +544,7 @@ namespace TiroApp.Pages
             }
             if (string.IsNullOrEmpty(GlobalStorage.Settings.CustomerId))
             {
+                discountLayout.IsVisible = false;
                 continueButton.IsVisible = false;
                 info.Children.Remove(servicesInfo);
                 info.Children.Remove(addressHolder);
@@ -376,48 +574,56 @@ namespace TiroApp.Pages
         }
         private void SendOrder()
         {
-            var spinner = UIUtils.ShowSpinner(this);
-            DataGate.AddAppointment(string.Empty, _order, resp =>
+            spinner = UIUtils.ShowSpinner(this);
+            if (_order.IsUpdate)
             {
-                UIUtils.HideSpinner(this, spinner);
-                if (resp.Code == ResponseCode.OK && resp.Result == "true")
+                DataGate.UpdateAppointment(_order.AppointmentId, _order, AddOrUpdateAppointmentResult);
+            }
+            else
+            {
+                DataGate.AddAppointment(string.Empty, _order, AddOrUpdateAppointmentResult);
+            }
+        }
+
+        private void AddOrUpdateAppointmentResult(ResponseDataJson resp)
+        {
+            UIUtils.HideSpinner(this, spinner);
+            if (resp.Code == ResponseCode.OK && resp.Result == "true")
+            {
+                Device.BeginInvokeOnMainThread(() =>
                 {
-                    Device.BeginInvokeOnMainThread(() =>
+                    tabView.IsVisible = false;
+                    if (tabViewContent != null)
                     {
-                        tabView.IsVisible = false;
-                        if (tabViewContent != null)
-                        {
-                            tabViewContent.IsVisible = false;
-                            alertInfo.IsVisible = false;
-                        }
-                        info.Children.Add(new Label
-                        {
-                            Text = "Your beauty professional has received\n your booking request and will get back\n "
-                                    + " to you shortly.\n\n"
-                                    + "You can check out the status of your\n request on the MyAppointments\n menu item",
-                            TextColor = Color.Black,
-                            FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR,
-                            HorizontalTextAlignment = TextAlignment.Center,
-                            VerticalOptions = LayoutOptions.CenterAndExpand,
-                            Margin = new Thickness(10)
-                        });
-                        continueButton.IsVisible = true;
-                        continueButton.Clicked -= OnContinueClick;
-                        continueButton.Clicked += (o, a) =>
-                        {
-                            Utils.ShowPageFirstInStack(this, new CustomerAppointments());
-                        };
-                        continueButton.Text = "CHECK MY APPOINTMENTS";
-                        header = UIUtils.MakeHeader(this, "Booking Confirmed");
-                        main.Children.RemoveAt(0);
-                        main.Children.Insert(0, header);
+                        tabViewContent.IsVisible = false;
+                        alertInfo.IsVisible = false;
+                    }
+                    info.Children.Add(new Label {
+                        Text = "Your beauty professional has received\n your booking request and will get back\n "
+                                + " to you shortly.\n\n"
+                                + "You can check out the status of your\n request on the MyAppointments\n menu item",
+                        TextColor = Color.Black,
+                        FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR,
+                        HorizontalTextAlignment = TextAlignment.Center,
+                        VerticalOptions = LayoutOptions.CenterAndExpand,
+                        Margin = new Thickness(10)
                     });
-                }
-                else
-                {
-                    UIUtils.ShowMessage("Booking was not added. Try later.", this);
-                }
-            });
-        }        
+                    continueButton.IsVisible = true;
+                    continueButton.Clicked -= OnContinueClick;
+                    continueButton.Clicked += (o, a) =>
+                    {
+                        Utils.ShowPageFirstInStack(this, new CustomerAppointments());
+                    };
+                    continueButton.Text = "CHECK MY APPOINTMENTS";
+                    header = UIUtils.MakeHeader(this, "Booking Confirmed");
+                    main.Children.RemoveAt(0);
+                    main.Children.Insert(0, header);
+                });
+            }
+            else
+            {
+                UIUtils.ShowMessage("Booking was not added. Try later.", this);
+            }
+        }
     }
 }

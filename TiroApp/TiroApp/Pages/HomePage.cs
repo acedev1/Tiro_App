@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,7 @@ namespace TiroApp.Pages
         private StackLayout homeHeader;
         private SearchHeader searchHeader;
         private RelativeLayout searchContainer;
+        private StackLayout cLayout;
 
         public HomePage()
         {
@@ -20,21 +22,22 @@ namespace TiroApp.Pages
             this.BackgroundColor = Color.White;
             BuildLayout();
             AddSideMenu();
+            LoadCards();
         }
-
+        
         private void BuildLayout()
         {
             homeHeader = BuildHomeHeader();
             mainLayout.Children.Add(homeHeader, Constraint.Constant(0), Constraint.Constant(0), Constraint.RelativeToParent(p => p.Width));
 
-            var cLayout = new StackLayout();
+            cLayout = new StackLayout();
             cLayout.Orientation = StackOrientation.Vertical;
-            cLayout.Children.Add(BuildImageBlock("TiroApp.Images.homew1.jpg", "GET YOUR FIRSTS FREE MAKEOVER NOW!", "near you", (v) =>
-            {
-                Navigation.PushAsync(new SearchPage(true));
-            }));
-            cLayout.Children.Add(BuildImageBlock("TiroApp.Images.homew2.jpg", "DISCOVER IMAZING MAKEUP ARTIST", "near you", (v) => { }));
-            cLayout.Children.Add(BuildImageBlock("TiroApp.Images.homew3.jpg", "BEST LOOKS", "featured artists", (v) => { }));
+            //cLayout.Children.Add(BuildImageBlock("TiroApp.Images.homew1.jpg", "GET YOUR FIRSTS FREE MAKEOVER NOW!", "near you", (v) =>
+            //{
+            //    Navigation.PushAsync(new SearchPage(true));
+            //}));
+            //cLayout.Children.Add(BuildImageBlock("TiroApp.Images.homew2.jpg", "DISCOVER IMAZING MAKEUP ARTIST", "near you", (v) => { }));
+            //cLayout.Children.Add(BuildImageBlock("TiroApp.Images.homew3.jpg", "BEST LOOKS", "featured artists", (v) => { }));
 
             var scrollView = new ScrollView();
             scrollView.Content = cLayout;
@@ -112,6 +115,24 @@ namespace TiroApp.Pages
             searchContainer.IsVisible = false;
         }
 
+        private void LoadCards()
+        {
+            DataGate.GetHomePage(r =>
+            {
+                if (r.Code == ResponseCode.OK)
+                {
+                    var arr = JArray.Parse(r.Result);
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        foreach (var item in arr)
+                        {
+                            cLayout.Children.Add(BuildImageBlock(new HomeCard(item as JObject)));
+                        }
+                    });
+                }
+            });
+        }
+
         private void SearchButton_Clicked(object sender, EventArgs e)
         {
             searchContainer.IsVisible = false;
@@ -120,26 +141,27 @@ namespace TiroApp.Pages
             this.Navigation.PushAsync(searchPage);
         }
 
-        private View BuildImageBlock(string image, string title, string title2, Action<View> tapAction)
+        private View BuildImageBlock(HomeCard homeCard)
         {
             var rl = new RelativeLayout();
             rl.HorizontalOptions = LayoutOptions.Fill;
             rl.HeightRequest = Device.OnPlatform(238, 270, 250);
 
             var img = new Image();
-            img.Source = ImageSource.FromResource(image);
+            //img.Source = ImageSource.FromResource(image);
+            img.Source = homeCard.CardImage;
             img.Aspect = Aspect.AspectFill;
             rl.Children.Add(img, Constraint.Constant(0), Constraint.Constant(0),
                 Constraint.RelativeToParent(p => p.Width), Constraint.RelativeToParent(p => p.Height));
 
             var locLabel = new CustomLabel();
-            locLabel.Text = title2;
+            locLabel.Text = homeCard.Title_2;
             locLabel.TextColor = Color.White;
             locLabel.FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR;
             locLabel.FontSize = 16;
 
             var tLabel = new CustomLabel();
-            tLabel.Text = title;
+            tLabel.Text = homeCard.Title;
             tLabel.TextColor = Color.White;
             tLabel.FontFamily = UIUtils.FONT_BEBAS_BOOK;
             tLabel.FontSize = 28;
@@ -158,9 +180,44 @@ namespace TiroApp.Pages
                 return p.Height - hLoc - h - 12;
             }));
 
-            rl.GestureRecognizers.Add(new TapGestureRecognizer(tapAction));
+            rl.GestureRecognizers.Add(new TapGestureRecognizer(v => {
+                if (homeCard.CardURL != null)
+                {
+                    Device.OpenUri(homeCard.CardURL);
+                }
+            }));
 
             return rl;
+        }
+    }
+
+    public class HomeCard
+    {
+        public HomeCard(JObject jObj)
+        {
+            Init(jObj);
+        }
+
+        public string Title { get; set; }
+        public string Title_2 { get; set; }
+        public ImageSource CardImage { get; set; }
+        public Uri CardURL { get; set; }
+
+        private void Init(JObject jObj)
+        {
+            Title = (string)jObj["Name"];
+            var imageUri = jObj["Image"];
+            if (imageUri != null)
+            {
+                UriImageSource imgs = (UriImageSource)ImageSource.FromUri(new Uri((string)imageUri));
+                //imgs.CachingEnabled = false;
+                CardImage = imgs;
+            }
+            var url = (Uri)jObj["URL"];
+            if (url != null)
+            {
+                CardURL = url;
+            }
         }
     }
 }

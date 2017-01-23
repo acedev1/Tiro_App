@@ -22,6 +22,7 @@ namespace TiroApp.Pages
         private Entry businessName;
         private Entry address;
         private Entry aboutMe;
+        private Entry travelEntry;
         private Client _client;
         private MediaFile photoFile;
         private GeoCoordinate lastLocation;
@@ -39,6 +40,8 @@ namespace TiroApp.Pages
             main = new StackLayout();
             main.Spacing = 0;
             main.BackgroundColor = Color.White;
+
+            var scrollableStack = new StackLayout();
 
             var header = UIUtils.MakeHeader(this, "You");
             main.Children.Add(header);
@@ -65,12 +68,12 @@ namespace TiroApp.Pages
 
             firstName = UIUtils.MakeEntry("First Name", UIUtils.FONT_SFUIDISPLAY_BOLD);
             firstName.Text = _client.FirstName;
-            main.Children.Add(firstName);
-            main.Children.Add(UIUtils.MakeSeparator());
+            scrollableStack.Children.Add(firstName);
+            scrollableStack.Children.Add(UIUtils.MakeSeparator());
             lastName = UIUtils.MakeEntry("Last Name", UIUtils.FONT_SFUIDISPLAY_BOLD);
             lastName.Text = _client.LastName;
-            main.Children.Add(lastName);
-            main.Children.Add(UIUtils.MakeSeparator());
+            scrollableStack.Children.Add(lastName);
+            scrollableStack.Children.Add(UIUtils.MakeSeparator());
             //phoneNumber = UIUtils.MakeEntry("Mobile Phone", UIUtils.FONT_SFUIDISPLAY_BOLD);
             //phoneNumber.Keyboard = Keyboard.Telephone;
             //phoneNumber.Text = _client.PhoneNumber;
@@ -82,17 +85,17 @@ namespace TiroApp.Pages
                 var artist = _client as MuaArtist;
                 businessName = UIUtils.MakeEntry("Business Name", UIUtils.FONT_SFUIDISPLAY_BOLD);
                 businessName.Text = artist.BusinessName;
-                main.Children.Add(businessName);
-                main.Children.Add(UIUtils.MakeSeparator());
+                scrollableStack.Children.Add(businessName);
+                scrollableStack.Children.Add(UIUtils.MakeSeparator());
 
                 aboutMe = UIUtils.MakeEntry("About Me", UIUtils.FONT_SFUIDISPLAY_BOLD);
                 aboutMe.Text = artist.AboutMe;
-                main.Children.Add(aboutMe);
-                main.Children.Add(UIUtils.MakeSeparator());
+                scrollableStack.Children.Add(aboutMe);
+                scrollableStack.Children.Add(UIUtils.MakeSeparator());
 
                 var addressACEntry = new AutoCompleteView();
                 address = addressACEntry.EntryText;
-                address.Text = artist.Address;
+                address.Text = artist.Location.Address;
                 address.FontFamily = UIUtils.FONT_SFUIDISPLAY_BOLD;
                 address.HeightRequest = 45;
                 address.FontSize = 17;
@@ -101,11 +104,21 @@ namespace TiroApp.Pages
                 address.Placeholder = "Location/Address";
                 address.PlaceholderColor = Color.FromHex("787878");
                 address.TextColor = Color.Black;
-                main.Children.Add(addressACEntry);
-                main.Children.Add(UIUtils.MakeSeparator());
+                scrollableStack.Children.Add(addressACEntry);
+                scrollableStack.Children.Add(UIUtils.MakeSeparator());
                 var sh = new PlaceSearchHelper(addressACEntry);
                 sh.OnSelected += (o, p) => { lastLocation = p; };
+
+                travelEntry = UIUtils.MakeEntry("Travel charge", UIUtils.FONT_SFUIDISPLAY_BOLD);
+                travelEntry.Keyboard = Keyboard.Numeric;
+                travelEntry.Text = artist.TravelCharge.ToString();
+                scrollableStack.Children.Add(travelEntry);
             }
+
+            var scrollView = new ScrollView {
+                Content = scrollableStack
+            };
+            main.Children.Add(scrollView);
 
             var saveButton = UIUtils.MakeButton("SAVE", UIUtils.FONT_SFUIDISPLAY_MEDIUM);
             saveButton.VerticalOptions = LayoutOptions.EndAndExpand;
@@ -130,6 +143,11 @@ namespace TiroApp.Pages
             {
                 (_client as MuaArtist).BusinessName = CheckInfoRow((_client as MuaArtist).BusinessName, businessName);
                 (_client as MuaArtist).AboutMe = CheckInfoRow((_client as MuaArtist).AboutMe, aboutMe);
+                int travelCharge = 0;
+                if (int.TryParse(travelEntry.Text, out travelCharge))
+                {
+                    (_client as MuaArtist).TravelCharge = travelCharge;
+                }
                 CheckAddress();
                 DataGate.MuaSetInfo((_client as MuaArtist), resp =>
                 {
@@ -150,8 +168,7 @@ namespace TiroApp.Pages
                         else
                         {
                             UIUtils.HideSpinner(this, spinner);
-                            UIUtils.ShowMessage("Info was edited successfully.", this);
-                            Device.BeginInvokeOnMainThread(() =>
+                            UIUtils.ShowMessage("Info was edited successfully.", this, () =>
                             {
                                 Navigation.PopAsync();
                             });
@@ -242,11 +259,11 @@ namespace TiroApp.Pages
         private void CheckAddress()
         {
             var artist = _client as MuaArtist;
-            if (!string.IsNullOrEmpty(address.Text) && !address.Text.Equals(artist.Address) && lastLocation != null)
+            if (!string.IsNullOrEmpty(address.Text) && !address.Text.Equals(artist.Location.Address) && lastLocation != null)
             {
-                artist.Address = address.Text;
-                artist.Lat = lastLocation.Latitude;
-                artist.Lon = lastLocation.Longitude;
+                artist.Location.Address = address.Text;
+                artist.Location.Lat = lastLocation.Latitude;
+                artist.Location.Lon = lastLocation.Longitude;
             }
         }
     }

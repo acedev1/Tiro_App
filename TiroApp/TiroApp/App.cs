@@ -1,5 +1,6 @@
 ﻿using Gis4Mobile.Services.GeoLocation;
 using PushNotification.Plugin;
+using System;
 using TiroApp.Pages;
 using Xamarin.Forms;
 
@@ -18,21 +19,23 @@ namespace TiroApp
             {
                 p = new Pages.Mua.MuaHomePage();
             }
-            else if (!string.IsNullOrEmpty(GlobalStorage.Settings.CustomerId))
+            else //(!string.IsNullOrEmpty(GlobalStorage.Settings.CustomerId))
             {
                 p = new HomePage();
             }
-            else
-            {
-                p = new LaunchPage();
-            }
             MainPage = new NavigationPage(p);
+            MainPage.Navigation.PushAsync(new Splash2Page());            
             Geolocator.Instance.GetPosition();
         }
 
         protected override void OnStart()
         {
             CrossPushNotification.Current.Register();
+            Utils.StartTimer(TimeSpan.FromSeconds(Device.OnPlatform(3, 6, 3)), () =>
+            {
+                MainPage.Navigation.PopAsync();
+                return false;
+            });
         }
 
         protected override void OnSleep()

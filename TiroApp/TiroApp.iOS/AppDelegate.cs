@@ -35,6 +35,8 @@ namespace TiroApp.iOS
             ImageCircle.Forms.Plugin.iOS.ImageCircleRenderer.Init();
             LoadApplication(new App());
 
+            KeyboardOverlap.Forms.Plugin.iOSUnified.KeyboardOverlapRenderer.Init();
+
             CrossPushNotification.Initialize<CrossPushNotificationListener>();
 
             UIApplication.SharedApplication.ApplicationIconBadgeNumber = 0;

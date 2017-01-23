@@ -32,7 +32,8 @@ namespace TiroApp.Pages.Mua
             this.Content = main;
 
             var imageTop = new Image();
-            imageTop.Source = ImageSource.FromResource("TiroApp.Images.w1.png");
+            //imageTop.Source = ImageSource.FromResource("TiroApp.Images.w1.png");
+            imageTop.Source = ImageSource.FromResource("TiroApp.Images.login_bg.jpg");
             imageTop.Aspect = Aspect.AspectFill;
             main.Children.Add(imageTop, Constraint.Constant(0), Constraint.Constant(0),
                 Constraint.RelativeToParent((p) => { return p.Width; }),
@@ -120,7 +121,7 @@ namespace TiroApp.Pages.Mua
                     return p.Height - bottomView.HeightRequest;
                 }), Constraint.RelativeToParent((p) => { return p.Width; }));
 
-            tabView = new TabView(new List<string> { "SING UP", "LOG IN" }, Color.FromHex("CF7090"));
+            tabView = new TabView(new List<string> { "SIGN UP", "LOG IN" }, Color.FromHex("CF7090"));
             tabView.OnIndexChange += OnTabChange;
             main.Children.Add(tabView, Constraint.Constant(0),
                 Constraint.RelativeToParent((p) =>
@@ -225,16 +226,26 @@ namespace TiroApp.Pages.Mua
                     if (data.Code == ResponseCode.OK)
                     {
                         var jobj = JObject.Parse(data.Result);
-                        var muaId = jobj["Id"] != null ? (string)jobj["Id"] : null;
+                        var muaId = jobj["Id"] != null ? (string)jobj["Id"] : null;                        
                         if (!string.IsNullOrEmpty(muaId))
                         {
-                            GlobalStorage.Settings.MuaId = muaId;
-                            GlobalStorage.SaveAppSettings();
-                            Notification.CrossPushNotificationListener.RegisterPushNotification();
-                            Device.BeginInvokeOnMainThread(() =>
+                            if ((bool)jobj["IsConfirmed"])
                             {
-                                Utils.ShowPageFirstInStack(this, new MuaHomePage());
-                            });
+                                GlobalStorage.Settings.MuaId = muaId;
+                                GlobalStorage.SaveAppSettings();
+                                Notification.CrossPushNotificationListener.RegisterPushNotification();
+                                Device.BeginInvokeOnMainThread(() =>
+                                {
+                                    Utils.ShowPageFirstInStack(this, new MuaHomePage());
+                                });
+                            }
+                            else
+                            {
+                                Device.BeginInvokeOnMainThread(() =>
+                                {
+                                    Utils.ShowPageFirstInStack(this, new UnderReviewPage());
+                                });
+                            }
                         }
                         else
                         {

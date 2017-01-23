@@ -43,8 +43,12 @@
     <Compile Include="Pages\AccountPage.cs" />
     <Compile Include="Pages\EditInfoPage.cs" />
     <Compile Include="Pages\EditPaymentPage.cs" />
+    <Compile Include="Pages\Mua\MuaProfilePage.cs" />
+    <Compile Include="Pages\SelectLocationPage.cs" />
+    <Compile Include="Pages\Splash2Page.cs" />
     <Compile Include="Pages\Mua\MuaAccountPage.cs" />
     <Compile Include="Pages\Mua\MuaServicesPage.cs" />
+    <Compile Include="Pages\Mua\UnderReviewPage.cs" />
     <Compile Include="Pages\SearchFilersPage.cs" />
     <Compile Include="Pages\Mua\AppointmentDetail.cs" />
     <Compile Include="Services\FacebookHelper.cs" />
@@ -94,10 +98,13 @@
     <Compile Include="Views\AccountLayout.cs" />
     <Compile Include="Views\AppointmentViewCell.cs" />
     <Compile Include="Views\AutoCompleteView.cs" />
+    <Compile Include="Views\ButtonGroup.cs" />
     <Compile Include="Views\CalendarView.cs" />
     <Compile Include="Views\ConfirmDialog.cs" />
     <Compile Include="Views\CustomEntry.cs" />
     <Compile Include="Views\CustomerSignupView.cs" />
+    <Compile Include="Views\MuaListSlider.cs" />
+    <Compile Include="Views\PhoneNumberEntry.cs" />
     <Compile Include="Views\RadioButton.cs" />
     <Compile Include="Views\RatingLayout.cs" />
     <Compile Include="Views\SearchHeader.cs" />
@@ -284,6 +291,25 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Images\search_sort_icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\Slider.png" />
+    <EmbeddedResource Include="Images\SliderBtnChecked_0.png" />
+    <EmbeddedResource Include="Images\SliderBtnChecked_1.png" />
+    <EmbeddedResource Include="Images\SliderBtnChecked_2.png" />
+    <EmbeddedResource Include="Images\SliderBtnUnchecked.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\login_bg.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\tiro_info_icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\location_black.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\muaListRectangle.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Project="..\..\packages\Xamarin.Forms.2.3.2.127\build\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Xamarin.Forms.targets" Condition="Exists('..\..\packages\Xamarin.Forms.2.3.2.127\build\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Xamarin.Forms.targets')" />

@@ -131,11 +131,15 @@ namespace TiroApp
             return true;
         }
 
-        public static void ShowMessage(string message, Page p)
+        public static void ShowMessage(string message, Page p, Action callback = null)
         {
-            Device.BeginInvokeOnMainThread(() =>
+            Device.BeginInvokeOnMainThread(async () =>
             {
-                p.DisplayAlert("Tiro", message, "OK");
+                await p.DisplayAlert("Tiro", message, "OK");
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    callback?.Invoke();
+                });
             });
         }
 

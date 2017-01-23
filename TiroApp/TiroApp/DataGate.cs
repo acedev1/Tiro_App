@@ -10,8 +10,8 @@ namespace TiroApp
 {
     public class DataGate
     {
-        public const string SERVER_URL = "http://tiro.flexible-solutions.com.ua";
-        private const string API_URL = "http://tiro.flexible-solutions.com.ua/api/";
+        public const string SERVER_URL = "http://104.155.95.63";
+        private const string API_URL = "http://104.155.95.63/api/";
         //private const string API_URL = "http://192.168.1.10/Tiro/api/";
 
         private const string M_CUSTOMER_LOGIN = "customer/login";
@@ -20,6 +20,16 @@ namespace TiroApp
         private const string M_MUA_GET = "mua/getmua";
         private const string M_MUA_LOGIN = "mua/login";
         private const string M_MUA_SIGNUP = "mua/signup";
+
+        public static void GetReview(string muaId, string customerId, Action<ResponseDataJson> callback)
+        {
+            MakeRequestJson($"mua/GetReview?muaId={muaId}&customerId={customerId}", string.Empty, callback);
+        }
+
+        public static void GetDiscount(string name, string customerId, Action<ResponseDataJson> callback)
+        {
+            MakeRequestJson($"appointment/getdiscount?name={name}&customerId={customerId}", string.Empty, callback);
+        }
 
         public static void VerifyPhoneNumber(string phone, Action<ResponseDataJson> callback)
         {
@@ -137,10 +147,11 @@ namespace TiroApp
             jObj["LastName"] = mua.LastName;
             jObj["BusinessName"] = mua.BusinessName;
             jObj["Phone"] = mua.PhoneNumber;
-            jObj["Address"] = mua.Address;
-            jObj["LocationLat"] = mua.Lat;
-            jObj["LocationLon"] = mua.Lon;
+            jObj["Address"] = mua.Location.Address;
+            jObj["LocationLat"] = mua.Location.Lat;
+            jObj["LocationLon"] = mua.Location.Lon;
             jObj["AboutMe"] = mua.AboutMe;
+            jObj["TravelCharge"] = mua.TravelCharge;
             MakeRequestJson("mua/setinfo", jObj.ToString(), callback);
         }
 
@@ -269,7 +280,49 @@ namespace TiroApp
                     new JProperty("Count", s.Count)
                 }));
             jObj["IsFree"] = order.IsFree;
+            if (order.DiscountId != null)
+            {
+                jObj["Discount"] = new JObject() { new JProperty("Id", order.DiscountId) };
+            }
+            if (order.Location != null)
+            {
+                jObj["Location"] = new JObject {
+                    new JProperty("Address", order.Location.Address),
+                    new JProperty("Lat", order.Location.Lat),
+                    new JProperty("Lon", order.Location.Lon)
+                };
+            }
             MakeRequestJson("appointment/add", jObj.ToString(), callback);
+        }
+
+        public static void UpdateAppointment(string id, Order order, Action<ResponseDataJson> callback)
+        {
+            var jObj = new JObject();
+            jObj["Id"] = id;
+            jObj["MuaId"] = order.Mua.Id;
+            jObj["CustomerId"] = GlobalStorage.Settings.CustomerId;
+            jObj["Time"] = order.DateTime.ToUniversalTime();
+            jObj["PaymentType"] = (int)order.PaymentType;
+            jObj["Message"] = order.Note;
+            jObj["Services"] = new JArray(order.Basket.Select(s =>
+                new JObject {
+                    new JProperty("ServiceId", s.Service.Id),
+                    new JProperty("Count", s.Count)
+                }));
+            jObj["IsFree"] = order.IsFree;
+            if (order.DiscountId != null)
+            {
+                jObj["Discount"] = new JObject() { new JProperty("Id", order.DiscountId) };
+            }
+            if (order.Location != null)
+            {
+                jObj["Location"] = new JObject {
+                    new JProperty("Address", order.Location.Address),
+                    new JProperty("Lat", order.Location.Lat),
+                    new JProperty("Lon", order.Location.Lon)
+                };
+            }
+            MakeRequestJson("appointment/update", jObj.ToString(), callback);
         }
 
         public static void GetAppointmentsByMua(string id, Action<ResponseDataJson> callback)
@@ -295,6 +348,11 @@ namespace TiroApp
         public static void GetMuaInfo(string id, Action<ResponseDataJson> callback)
         {
             MakeRequestJson($"mua/getinfo?id={id}", string.Empty, callback);
+        }
+
+        public static void SetDefaultPicture(string muaId, string defaultPicture, Action <ResponseDataJson> callback)
+        {
+            MakeRequestJson($"mua/SetDefaultPicture?muaId={muaId}&defaultPicture={defaultPicture}", string.Empty, callback);
         }
 
         public static void SetAppointmentStatus(string appointmentId, int status, Action<ResponseDataJson> callback)
@@ -348,6 +406,33 @@ namespace TiroApp
                 return;
             }
             MakeRequestJson("appointment/unregisterpn", obj.ToString(), r => { });
+        }
+
+        public static void GetHomePage(Action<ResponseDataJson> callback)
+        {
+            System.Net.HttpWebRequest request = System.Net.HttpWebRequest.CreateHttp(SERVER_URL + "/AppHome/GetJson");
+            request.ContentType = "text/json";
+            request.Accept = "text/json";
+            request.Method = "GET";
+            request.GetResponseAsync().ContinueWith(t =>
+            {
+                var isOk = false;
+                try
+                {
+                    var responseStream = t.Result.GetResponseStream();
+                    var jsonStr = new System.IO.StreamReader(responseStream).ReadToEnd();
+                    responseStream.Dispose();
+                    isOk = true;
+                    callback.Invoke(new ResponseDataJson(ResponseCode.OK, jsonStr));
+                }
+                catch (Exception e)
+                {
+                    if (!isOk)
+                    {
+                        callback.Invoke(new ResponseDataJson(ResponseCode.Fail, null, e));
+                    }
+                }
+            });
         }
 
         private static JObject BiuldJson(Dictionary<string, object> data)

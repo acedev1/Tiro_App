@@ -17,6 +17,7 @@ namespace TiroApp.Model
         public string FullName { get { return FirstName + " " + LastName; } }
         public string PhoneNumber { get; set; }
         public ImageSource CustomerImage { get; protected set; }
+        public string DefaultPicture { get; set; }
     }
 
     public class MuaArtist : Client
@@ -29,24 +30,21 @@ namespace TiroApp.Model
         }
 
         public string BusinessName { get; set; }
-        public string Address { get; set; }
         public ImageSource ArtistImage { get; private set; }
-        public Image Map { get; private set; }
-        public double Lat { get; set; }
-        public double Lon { get; set; }
+        public Location Location { get; set; }
         public string AboutMe { get; set; }
         public List<Service> Services { get; private set; } = new List<Service>();
         public List<Review> Reviews { get; private set; } = new List<Review>();
         public List<string> Images { get; set; }
+        public bool IsTravelAvailable { get; set; }
+        public double TravelCharge { get; set; }
 
         private void Init(JObject jObj)
         {
-            var test = jObj.ToString();
             Id = _isFromGetMua ? (string)jObj["Id"] : (string)jObj["MuaId"];
             FirstName = _isFromGetMua ? (string)jObj["FirstName"] : (string)jObj["MuaFirstName"];
             LastName = _isFromGetMua ? (string)jObj["LastName"] : (string)jObj["MuaLastName"];
-            Address = _isFromGetMua ? (string)jObj["Address"] : (string)jObj["MuaAddress"];
-            BusinessName = _isFromGetMua ? (string)jObj["BusinessName"] : null;            
+            BusinessName = _isFromGetMua ? (string)jObj["BusinessName"] : (string)jObj["MuaBusinessName"];
             var imageUri = _isFromGetMua ? jObj["ProfilePicture"] : jObj["MuaImage"];
             if (imageUri != null)
             {
@@ -62,12 +60,6 @@ namespace TiroApp.Model
             {
                 Images = ((JArray)jObj["Pictures"]).Select(jo => (string)jo).ToList();
             }
-            Lat = _isFromGetMua ? (double)jObj["LocationLat"] : (double)jObj["MuaLocationLat"];
-            Lon = _isFromGetMua ? (double)jObj["LocationLon"] : (double)jObj["MuaLocationLon"];
-            var url = $"https://maps.googleapis.com/maps/api/staticmap?center={Lat},{Lon}&zoom=12&size={App.ScreenWidth}x300&key={Props.GOOGLE_KEY}";
-            Map = new Image();
-            Map.Source = ImageSource.FromUri(new Uri(url));
-            Map.Aspect = Aspect.AspectFill;
             if (_isFromGetMua)
             {
                 AboutMe = (string)jObj["AboutMe"];
@@ -85,7 +77,15 @@ namespace TiroApp.Model
                         Reviews.Add(new Review(review));
                     }
                 }
+                IsTravelAvailable = (bool)jObj["IsTravelAvailable"];
+                TravelCharge = (double)jObj["TravelCharge"];
             }
+            else
+            {
+                TravelCharge = (double)jObj["MuaTravelCharge"];
+            }
+            Location = new Location(jObj, _isFromGetMua);
+            DefaultPicture = (string)jObj["DefaultPicture"];
         }
     }
 
@@ -115,6 +115,41 @@ namespace TiroApp.Model
                 CustomerImage = ImageSource.FromResource("TiroApp.Images.empty_profile.jpg");
             }
             PhoneNumber = (string)jObj["Phone"];
+        }
+    }
+
+    public class Location
+    {
+        public string Address { get; set; }
+        public Image Map { get; private set; }
+        public double Lat { get; set; }
+        public double Lon { get; set; }
+
+        private bool _isFromGetMua;
+        private bool _isAppointmentInfo;
+        public Location() { }
+        public Location(JObject jObj, bool isFromGetMua, bool isAppointmentInfo = false)
+        {
+            this._isFromGetMua = isFromGetMua;
+            this._isAppointmentInfo = isAppointmentInfo;
+            Init(jObj);
+        }
+
+        private void Init(JObject jObj)
+        {
+            Address = _isFromGetMua ? (string)jObj["Address"] : (string)jObj["MuaAddress"];
+            Lat = _isFromGetMua ? (_isAppointmentInfo ? (double)jObj["Lat"] : (double)jObj["LocationLat"]) 
+                : (double)jObj["MuaLocationLat"];
+            Lon = _isFromGetMua ? (_isAppointmentInfo ? (double)jObj["Lon"] : (double)jObj["LocationLon"]) 
+                : (double)jObj["MuaLocationLon"];
+            MapInit();
+        }
+        public void MapInit()
+        {
+            var url = $"https://maps.googleapis.com/maps/api/staticmap?center={Lat},{Lon}&zoom=12&size={App.ScreenWidth}x300&key={Props.GOOGLE_KEY}";
+            Map = new Image();
+            Map.Source = ImageSource.FromUri(new Uri(url));
+            Map.Aspect = Aspect.AspectFill;
         }
     }
 }

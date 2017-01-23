@@ -33,7 +33,8 @@ namespace TiroApp
             this.Content = main;
 
             var imageTop = new Image();
-            imageTop.Source = ImageSource.FromResource("TiroApp.Images.w1.png");
+            //imageTop.Source = ImageSource.FromResource("TiroApp.Images.w1.png");
+            imageTop.Source = ImageSource.FromResource("TiroApp.Images.login_bg.jpg");
             imageTop.Aspect = Aspect.AspectFill;
             main.Children.Add(imageTop, Constraint.Constant(0), Constraint.Constant(0),
                 Constraint.RelativeToParent((p) => { return p.Width; }),
@@ -46,7 +47,7 @@ namespace TiroApp
                     return p.Height - bottomView.HeightRequest;
                 }), Constraint.RelativeToParent((p) => { return p.Width; }));
 
-            tabView = new TabView(new List<string> { "SING UP", "LOG IN" }, Color.FromHex("CF7090"));
+            tabView = new TabView(new List<string> { "SIGN UP", "LOG IN" }, Color.FromHex("CF7090"));
             tabView.OnIndexChange += OnTabChange;
             main.Children.Add(tabView, Constraint.Constant(0),
                 Constraint.RelativeToParent((p) =>
@@ -55,6 +56,24 @@ namespace TiroApp
                 }),
                 Constraint.RelativeToParent((p) => { return p.Width; }),
                 Constraint.Constant(tabView.HeightRequest));
+
+            var signupMua = new CustomLabel()
+            {
+                Text = "I'm a Makeup Artist",
+                TextColor = Props.ButtonColor,
+                FontFamily = UIUtils.FONT_SFUIDISPLAY_MEDIUM,
+                FontSize = 16
+            };
+            signupMua.GestureRecognizers.Add(new TapGestureRecognizer(v =>
+            {
+                Utils.ShowPageFirstInStack(this, new Pages.Mua.MuaLoginPage());
+            }));
+            var signupMuaWidth = Utils.GetControlSize(signupMua).Width;
+            if (signupMuaWidth == -1)
+            {
+                signupMuaWidth = 150;
+            }
+            main.Children.Add(signupMua, Constraint.RelativeToParent(p => p.Width - signupMua.Width - 20), Constraint.Constant(20));
 
             BuildSignUp();
 
@@ -141,8 +160,45 @@ namespace TiroApp
                 DoLogin(email, password);
             };
 
+            var loginFBButton = UIUtils.MakeButton("LOG IN WITH FACEBOOK", UIUtils.FONT_SFUIDISPLAY_MEDIUM);
+            loginFBButton.BackgroundColor = Color.FromHex("5E73AB");
+            bottom.Children.Add(loginFBButton);
+            loginFBButton.Clicked += OnLoginFB; ;
+
             bottomView.Content = bottom;
             bottomView.HeightRequest = Utils.GetControlSize(bottom).Height;
+        }
+
+        private void OnLoginFB(object sender, EventArgs e)
+        {
+            var spinner = UIUtils.ShowSpinner(this);
+            DependencyService.Get<IFacebookHelper>().Start((resp) => {
+                if (resp.Code == ResponseCode.OK)
+                {
+                    var obj = JObject.Parse(resp.Result);
+                    var email = obj["email"].ToString();
+                    var password = Ext.MD5.GetMd5String(obj["id"].ToString());
+                    var fbId = obj["id"].ToString();
+                    DataGate.CustomerLoginJson(email, password, fbId, (loginResp) =>
+                    {
+                        if (loginResp.Code == ResponseCode.OK)
+                        {
+                            var jobj = JObject.Parse(loginResp.Result);
+                            OnLoginOk(jobj);
+                        }
+                        else
+                        {
+                            UIUtils.ShowMessage("Login failed. Try later", this);
+                        }
+                        UIUtils.HideSpinner(this, spinner);
+                    });
+                }
+                else
+                {
+                    UIUtils.ShowMessage("Login failed. Try later", this);
+                    UIUtils.HideSpinner(this, spinner);
+                }
+            });
         }
 
         private void OnSignupMail(object sender, EventArgs e)

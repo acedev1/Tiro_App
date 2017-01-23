@@ -40,10 +40,11 @@ namespace TiroApp.Views
             }
             catch
             {
-                if (rl != null)
+                try
                 {
                     ((Layout<View>)page.Content).Children.Remove(rl);
                 }
+                catch { }
             }
         }
 

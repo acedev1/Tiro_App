@@ -30,6 +30,7 @@ namespace Gis4Mobile.Services.GeoLocation
 
         public void GetPosition()
         {
+            locator.StopListening();
             locator.StartListening(0, 0);
         }
 

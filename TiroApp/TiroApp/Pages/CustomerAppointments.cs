@@ -26,7 +26,7 @@ namespace TiroApp.Pages
             BuildLayout();
             AddSideMenu();
             spinner = UIUtils.ShowSpinner(this);
-            RefreshData();
+            //RefreshData();
         }
 
         public void RefreshData()
@@ -67,10 +67,81 @@ namespace TiroApp.Pages
             contentLayout.Children.Add(tabView);
 
             listView = new ListView();
-            listView.ItemTemplate = new DataTemplate(() => new AppointmentViewCell());
+            listView.ItemTemplate = new DataTemplate(() => new AppointmentViewCell(false, OnRescheduleClick, OnCancelClick));
             listView.SeparatorVisibility = SeparatorVisibility.None;
             listView.ItemTapped += ItemSelected;
             contentLayout.Children.Add(listView);
+        }
+
+        private void OnRescheduleClick(object sender, EventArgs arg)
+        {
+            var btn = sender as Button;
+            var id = btn.GetValue(UIUtils.TagProperty).ToString();
+            var jObj = (JObject)appData.SingleOrDefault(o => (string)o["Id"] == id);
+            if (jObj == null)
+            {
+                return;
+            }
+            var order = new Order(jObj);
+            spinner = UIUtils.ShowSpinner(this);
+            DataGate.MuaGetAvailability(order.Mua.Id, DateTime.Today, DateTime.Today.AddMonths(6), true, result =>
+            {
+                if (result.Code == ResponseCode.OK)
+                {
+                    var avail = Availibility.Parse(result.Result);
+                    if (avail.DatesFrom.Count == 0)
+                    {
+                        Device.BeginInvokeOnMainThread(() =>
+                        {
+                            UIUtils.HideSpinner(this, spinner);
+                            UIUtils.ShowMessage("The artist does not have free time for the next month", this);
+                        });
+                        return;
+                    }
+                    order.IsFree = SearchHeader.IsFreeMakeoverL;
+                    order.IsUpdate = true;
+                    var ap = new AvailabilityPage(order);
+                    ap.Availibility = avail;
+                    ap.SelectedDate = avail.DatesFrom.First();
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        this.Navigation.PushAsync(ap);
+                    });
+                }
+                else
+                {
+                    UIUtils.ShowServerUnavailable(this);
+                }
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    UIUtils.HideSpinner(this, spinner);
+                });
+            });
+        }
+
+        private async void OnCancelClick(object sender, EventArgs arg)
+        {
+            var isOk = await this.DisplayAlert("Tiro", "Are you sure to cancel?", "Yes", "No");
+            if (isOk)
+            {
+                var btn = sender as Button;
+                var id = btn.GetValue(UIUtils.TagProperty).ToString();
+                DataGate.SetAppointmentStatus(id, (int)AppointmentStatus.DeclinedByCustomer, OnStatusChanged);
+                spinner = UIUtils.ShowSpinner(this);
+            }
+        }
+
+        private void OnStatusChanged(ResponseDataJson r)
+        {
+            UIUtils.HideSpinner(this, spinner);
+            if (r.Code == ResponseCode.OK && r.Result == "true")
+            {
+                RefreshData();
+            }
+            else
+            {
+                UIUtils.ShowMessage("Server does not response", this);
+            }
         }
 
         private void OnDataLoad(ResponseDataJson r)
@@ -94,18 +165,25 @@ namespace TiroApp.Pages
         private void OnTabChange(object sender, int index)
         {
             currentTabIndex = index;
-            var test = appData.ToString();
+            if (appData == null)
+            {
+                return;
+            }
             if (currentTabIndex == 0)
             {
-                var dataFiltered = appData.Where(o => ((DateTime)o["Time"] >= DateTime.Now));
+                //var dataFiltered = appData.Where(o => ((DateTime)o["Time"] >= DateTime.Now));
+                var dataFiltered = appData.Where(o => ((DateTime)o["Time"] >= DateTime.Now) 
+                        && (AppointmentStatus)(int)o["Status"] != AppointmentStatus.DeclinedByCustomer);
                 var dataConverted = dataFiltered.Select(o => new AppointmentItem((JObject)o));
-                listView.RowHeight = Device.OnPlatform(115, 120, 115);
+                listView.RowHeight = Device.OnPlatform(170, 180, 170);
                 listView.ItemsSource = null;
                 listView.ItemsSource = dataConverted;
             }
             else if (currentTabIndex == 1)
             {
-                var dataFiltered = appData.Where(o => ((DateTime)o["Time"] < DateTime.Now));
+                //var dataFiltered = appData.Where(o => ((DateTime)o["Time"] < DateTime.Now));
+                var dataFiltered = appData.Where(o => ((DateTime)o["Time"] < DateTime.Now)
+                        && (AppointmentStatus)(int)o["Status"] != AppointmentStatus.DeclinedByCustomer);
                 var dataConverted = dataFiltered.Select(o => new AppointmentItem((JObject)o));
                 listView.RowHeight = Device.OnPlatform(115, 120, 115);
                 listView.ItemsSource = null;
@@ -130,6 +208,12 @@ namespace TiroApp.Pages
             });
 
             listView.SelectedItem = null;
+        }
+
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            RefreshData();
         }
     }
 }

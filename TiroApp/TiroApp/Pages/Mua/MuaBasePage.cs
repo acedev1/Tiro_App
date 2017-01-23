@@ -18,14 +18,14 @@ namespace TiroApp.Pages.Mua
             list.Add(GetMenuItem("Appointments", "appointment", (v) => { ShowPage(typeof(MuaHomePage)); }));
             list.Add(GetMenuItem("My Availability", "muah_availability", OnAvailablilitySelect));
             list.Add(GetMenuItem("My services", "muah_services", (v) => { Navigation.PushAsync(new MuaServicesPage()); }));
-            list.Add(GetMenuItem("My portfolio", "muah_services", (v) => { }));
+            list.Add(GetMenuItem("My portfolio", "muah_services", v => { OnMyAccountSelect(true); }));
             return list;
         }
 
         protected override IList<View> GetBottomItems()
         {
             List<View> list = new List<View>();
-            list.Add(GetMenuItem("My account", "avatar", OnMyAccountSelect));
+            list.Add(GetMenuItem("My account", "avatar", v => { OnMyAccountSelect(); }));
             list.Add(GetMenuItem("Logout", "muah_logout", (v) => {
                 GlobalStorage.Settings.MuaId = string.Empty;
                 GlobalStorage.SaveAppSettings();
@@ -35,7 +35,7 @@ namespace TiroApp.Pages.Mua
             return list;
         }
 
-        private void OnMyAccountSelect(View v)
+        private void OnMyAccountSelect(bool isOnlyPortfolio = false)
         {
             spinner = UIUtils.ShowSpinner(this);
             DataGate.GetMuaInfo(GlobalStorage.Settings.MuaId, resp => {
@@ -43,7 +43,16 @@ namespace TiroApp.Pages.Mua
                 {
                     var jObj = JObject.Parse(resp.Result);
                     //Utils.ShowPageFirstInStack(this, new AccountPage(jObj, true));
-                    Utils.ShowPageFirstInStack(this, new MuaAccountPage(jObj));
+                    if (isOnlyPortfolio)
+                    {
+                        Device.BeginInvokeOnMainThread(() => { 
+                        Navigation.PushAsync(new MuaProfilePage(jObj));
+                        });
+                    }
+                    else
+                    {
+                        Utils.ShowPageFirstInStack(this, new MuaAccountPage(jObj));
+                    }
                 }
                 else
                 {

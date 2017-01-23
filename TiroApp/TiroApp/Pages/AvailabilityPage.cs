@@ -209,6 +209,7 @@ namespace TiroApp
                 rb.TextColor = Color.Black;
                 rb.FontSize = 17;
                 rb.FontFamily = UIUtils.FONT_SFUIDISPLAY_REGULAR;
+                rb.IsMultiChecker = true;
                 if (Availibility.DaysOfWeek != null)
                 {
                     if (Availibility.DaysOfWeek.Contains(d))
@@ -310,20 +311,65 @@ namespace TiroApp
             var datesFrom = Availibility.DatesFrom;
             //if (Availibility.Mode == AvailibilityMode.Dates)
             //{
-                datesFrom = Availibility.DatesFrom.Where(d => d.Date == _selectedDate.Date).ToList();
+                datesFrom = Availibility.DatesFrom.Where(d => IsValidDate(d)).ToList();
             //}
-            for (var i = 0; i < datesFrom.Count; i++)
+            var datesTo = Availibility.DatesTo.Where(d => IsValidDate(d)).Select(dt => dt.TimeOfDay).ToList();
+            var datesFromT = datesFrom.Select(d => d.TimeOfDay).ToList();
+            datesFromT.AddRange(datesTo);
+            var times = datesFromT.Distinct().ToList();
+            if (times.Count == 0)
             {
-                var fromTime = datesFrom[i].TimeOfDay;
-                if (_selectedTime != null && _selectedTime.Equals(fromTime))
+                return;
+            }
+            //var hours = (times.Max() - times.Min()).TotalHours;
+            //for (var i = 0; i < datesFrom.Count; i++)
+            //{
+            //    var fromTime = datesFrom[i].TimeOfDay;
+            //    if (_selectedTime != null && _selectedTime.Equals(fromTime))
+            //    {
+            //        AddTimeLabel(elWidth, fromTime, l, true);
+            //    }
+            //    else
+            //    {
+            //        AddTimeLabel(elWidth, fromTime, l);
+            //    }
+            //}
+            var timesHolder = new StackLayout {
+                Orientation = StackOrientation.Horizontal,
+                Spacing = 0
+            };
+            var currentHour = times.Min();
+            var maxHour = times.Max();
+            while (currentHour <= maxHour)
+            {
+                if (_selectedTime != null && _selectedTime.Equals(currentHour))
                 {
-                    AddTimeLabel(elWidth, fromTime, l, true);
+                    AddTimeLabel(elWidth, currentHour, timesHolder, true);
                 }
                 else
                 {
-                    AddTimeLabel(elWidth, fromTime, l);
+                    AddTimeLabel(elWidth, currentHour, timesHolder);
                 }
+                currentHour = currentHour.Add(TimeSpan.FromHours(1));
             }
+            l.Children.Add(new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = timesHolder });
+        }
+
+        private bool IsValidDate(DateTime dateTime)
+        {
+            if (_selectedDate.Day == DateTime.Now.Day && dateTime.Date == _selectedDate.Date)
+            {
+                if (TimeSpan.Compare(dateTime.TimeOfDay, DateTime.Now.TimeOfDay) > 0)
+                {
+                    return true;
+                }
+                return false;
+            }
+            else if (dateTime.Date == _selectedDate.Date)
+            {
+                return true;
+            }
+            return false;
         }
 
         private void BuildTimePickerView()
@@ -390,12 +436,18 @@ namespace TiroApp
                 var addImage = new Image();
                 addImage.Source = ImageSource.FromResource("TiroApp.Images.PlusBlack.png");
                 addImage.HeightRequest = 20;
-                addImage.VerticalOptions = LayoutOptions.Center;
-                addImage.GestureRecognizers.Add(new TapGestureRecognizer((v) =>
+                addImage.WidthRequest = 20;
+                var addImageL = new ContentView()
+                {
+                    Padding = new Thickness(10),
+                    Content = addImage,
+                    VerticalOptions = LayoutOptions.Center
+                };
+                addImageL.GestureRecognizers.Add(new TapGestureRecognizer((v) =>
                 {
                     AddTimePickerPair(elWidth, new TimeSpan(), new TimeSpan(), l, true);
                 }));
-                l.Children.Add(addImage);
+                l.Children.Add(addImageL);
             }
         }
 
@@ -484,7 +536,7 @@ namespace TiroApp
                 order.PaymentType = PaymentType.Card;
                 root.Children.Remove(layout);
                 blackout.IsVisible = false;
-                this.Navigation.PushAsync(new OrderSummary(order));
+                this.Navigation.PushAsync(new SelectLocationPage(order));
             };
 
             var cashPay = UIUtils.MakeButton("PAY WITH CASH", UIUtils.FONT_SFUIDISPLAY_MEDIUM);
@@ -493,7 +545,7 @@ namespace TiroApp
                 order.PaymentType = PaymentType.Cash;
                 root.Children.Remove(layout);
                 blackout.IsVisible = false;
-                this.Navigation.PushAsync(new OrderSummary(order));
+                this.Navigation.PushAsync(new SelectLocationPage(order));
             };
 
             var cancel = UIUtils.MakeButton("CANCEL", UIUtils.FONT_SFUIDISPLAY_MEDIUM);

@@ -34,7 +34,7 @@ namespace TiroApp.Droid
             cv.PostDelayed(() =>
             {
                 cv.RemoveView(img);
-            }, 5000);
+            }, 3000);
         }
 
         protected override void OnStart()

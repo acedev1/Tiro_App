@@ -43,7 +43,7 @@ namespace TiroApp.Views
 
             AddInfoLayout();
 
-            AddButtonBlock("Contact Information", (s, a) => {
+            AddButtonBlock("Account information", (s, a) => {
                 _page.Navigation.PushAsync(new EditInfoPage(_client));
             });
             if (_client is Customer)

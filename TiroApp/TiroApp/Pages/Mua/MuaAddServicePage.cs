@@ -198,8 +198,7 @@ namespace TiroApp.Pages.Mua
                 UIUtils.HideSpinner(this, spinner);
                 if (resp.Code == ResponseCode.OK && resp.Result == "true")
                 {
-                    UIUtils.ShowMessage($"Service was {(isEditMode ? "changed" : "added")} successfully.", this);
-                    Device.BeginInvokeOnMainThread(() =>
+                    UIUtils.ShowMessage($"Service was {(isEditMode ? "changed" : "added")} successfully.", this, () =>
                     {
                         this.Navigation.PopAsync();
                     });

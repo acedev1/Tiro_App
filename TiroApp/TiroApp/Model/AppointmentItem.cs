@@ -124,18 +124,53 @@ namespace TiroApp.Model
                 return Status != AppointmentStatus.New;
             }
         }
+        public bool IsStatusConfirmed
+        {
+            get
+            {
+                return Status == AppointmentStatus.Approved;
+            }
+        }
+        public bool IsStatusNewAndNotPast
+        {
+            get
+            {
+                return Status == AppointmentStatus.New && DateDT >= DateTime.Now;
+            }
+        }
+        public bool IsMakePayment
+        {
+            get
+            {
+                return IsStatusConfirmed && this.PaymentType == PaymentType.Card;
+            }
+        }
+        public bool IsOverlayed
+        {
+            get
+            {
+                return IsStatusNew || IsMakePayment;
+            }
+        }
         public ImageSource ConfirmedImageSource
         {
             get
             {
-                if (Status == AppointmentStatus.Approved)
-                {
-                    return ImageSource.FromResource("TiroApp.Images.confirmed.png");
-                }
-                else
+                if (Status == AppointmentStatus.Declined)
                 {
                     return ImageSource.FromResource("TiroApp.Images.declined.png");
                 }
+                else
+                {
+                    return ImageSource.FromResource("TiroApp.Images.confirmed.png");
+                }
+            }
+        }
+        public PaymentType PaymentType
+        {
+            get
+            {
+                return (PaymentType)(int)jobj["PaymentType"];
             }
         }
     }
@@ -145,6 +180,7 @@ namespace TiroApp.Model
         New = 0,
         Approved = 1,
         Declined = 2,
+        DeclinedByCustomer = 3,
         Paid = 5
     }
 }

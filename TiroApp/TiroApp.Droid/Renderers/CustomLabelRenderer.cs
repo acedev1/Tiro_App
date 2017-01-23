@@ -22,7 +22,8 @@ namespace Droid.CustomRenderers
             base.OnElementPropertyChanged(sender, e);
 
             // Update native Textview
-            if (_xamFormsSender != sender || e.PropertyName == CustomLabel.FontFamilyProperty.PropertyName)
+            if (_xamFormsSender != sender || e.PropertyName == CustomLabel.FontFamilyProperty.PropertyName 
+                || e.PropertyName == CustomLabel.LetterSpacingProperty.PropertyName)
             {
                 var font = ((CustomLabel)sender).FontFamily;
 
@@ -40,6 +41,11 @@ namespace Droid.CustomRenderers
                     var label = Control as TextView;
                     if (label != null)
                         label.Typeface = typeface;
+                    if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.Lollipop)
+                    {
+                        //label.LetterSpacing = 0.5f;
+                        label.LetterSpacing = ((CustomLabel)this.Element).LetterSpacing;
+                    }
                 }
 
                 _xamFormsSender = sender;
