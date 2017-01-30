@@ -32,9 +32,9 @@
 	<key>CFBundleDisplayName</key>
 	<string>TiroApp</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.fxsl.tiro</string>
+	<string>com.tiro.tiro</string>
 	<key>CFBundleVersion</key>
-	<string>1.0.2</string>
+	<string>1.2</string>
 	<key>CFBundleIconFiles</key>
 	<array>
 		<string>Icon-72@2x.png</string>
@@ -57,7 +57,7 @@
 		<string>Icon-Small@2x.png</string>
 	</array>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.2</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

@@ -38,6 +38,7 @@ namespace TiroApp.Model
         public List<string> Images { get; set; }
         public bool IsTravelAvailable { get; set; }
         public double TravelCharge { get; set; }
+        public string Instagram { get; set; }
 
         private void Init(JObject jObj)
         {
@@ -86,6 +87,10 @@ namespace TiroApp.Model
             }
             Location = new Location(jObj, _isFromGetMua);
             DefaultPicture = (string)jObj["DefaultPicture"];
+            if (jObj["Instagram"] != null)
+            {
+                Instagram = (string)jObj["Instagram"];
+            }
         }
     }
 

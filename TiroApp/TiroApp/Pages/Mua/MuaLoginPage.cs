@@ -225,10 +225,10 @@ namespace TiroApp.Pages.Mua
                 {
                     if (data.Code == ResponseCode.OK)
                     {
-                        var jobj = JObject.Parse(data.Result);
-                        var muaId = jobj["Id"] != null ? (string)jobj["Id"] : null;                        
-                        if (!string.IsNullOrEmpty(muaId))
+                        try
                         {
+                            var jobj = JObject.Parse(data.Result);
+                            var muaId = (string)jobj["Id"];
                             if ((bool)jobj["IsConfirmed"])
                             {
                                 GlobalStorage.Settings.MuaId = muaId;
@@ -247,7 +247,7 @@ namespace TiroApp.Pages.Mua
                                 });
                             }
                         }
-                        else
+                        catch
                         {
                             UIUtils.ShowMessage("Login failed. Wrong email or password", this);
                         }

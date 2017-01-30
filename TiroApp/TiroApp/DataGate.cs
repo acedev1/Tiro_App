@@ -12,7 +12,7 @@ namespace TiroApp
     {
         public const string SERVER_URL = "http://104.155.95.63";
         private const string API_URL = "http://104.155.95.63/api/";
-        //private const string API_URL = "http://192.168.1.10/Tiro/api/";
+        //private const string API_URL = "http://tiro.flexible-solutions.com.ua/api/";
 
         private const string M_CUSTOMER_LOGIN = "customer/login";
         private const string M_CUSTOMER_SIGNUP = "customer/signup";
@@ -353,6 +353,16 @@ namespace TiroApp
         public static void SetDefaultPicture(string muaId, string defaultPicture, Action <ResponseDataJson> callback)
         {
             MakeRequestJson($"mua/SetDefaultPicture?muaId={muaId}&defaultPicture={defaultPicture}", string.Empty, callback);
+        }
+
+        public static void MuaUpdatePictures(string muaId, IEnumerable<string> pictures, Action<ResponseDataJson> callback)
+        {
+            var jArr = new JArray();
+            foreach (var s in pictures)
+            {
+                jArr.Add(s);
+            }
+            MakeRequestJson($"mua/UpdatePictures?muaId={muaId}", jArr.ToString(), callback);
         }
 
         public static void SetAppointmentStatus(string appointmentId, int status, Action<ResponseDataJson> callback)

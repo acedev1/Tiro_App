@@ -446,14 +446,20 @@ namespace TiroApp.Pages
             price.Margin = new Thickness(20, 0, 0, 0);
 
             var info = new StackLayout {
+                HorizontalOptions = LayoutOptions.Fill,
                 Children = { name, price }
             };
 
             var line = MakeSeparateLine();
 
-            var infoLayout = new StackLayout();
-            infoLayout.Orientation = StackOrientation.Horizontal;
-            infoLayout.Children.Add(info);
+            //var infoLayout = new StackLayout();            
+            //infoLayout.Orientation = StackOrientation.Horizontal;
+            var grid = new Grid();
+            grid.HorizontalOptions = LayoutOptions.FillAndExpand;
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.Children.Add(info);
             if (isChecked)
             {
                 var check = new Image();
@@ -468,7 +474,7 @@ namespace TiroApp.Pages
                     order.Basket.Remove(order.Basket.Single(i => i.Service.Id.Equals(service.Id)));
                     BuildServicesList();
                 }));
-                infoLayout.Children.Add(check);
+                grid.Children.Add(check, 0, 0);
             }
             else
             {
@@ -485,11 +491,11 @@ namespace TiroApp.Pages
                     order.Basket.Add(new OrderItem(service, 1));
                     BuildServicesList();
                 };
-                infoLayout.Children.Add(bookButton);
+                grid.Children.Add(bookButton, 1, 0);
             }
 
             var layout = new StackLayout {
-                Children = { infoLayout, line }
+                Children = { grid, line }
             };
             return layout;
         }

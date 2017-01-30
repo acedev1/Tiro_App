@@ -26,6 +26,7 @@ namespace TiroApp.Pages.Mua
             BackgroundColor = Color.White;
             Utils.SetupPage(this);
             _mua = new MuaArtist(jObj, true);
+            _mua.Images = _mua.Images.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
             BuildLayout();
         }
 
@@ -51,24 +52,24 @@ namespace TiroApp.Pages.Mua
                 RowSpacing = 5,
                 Margin = new Thickness(5, 0, 5, 0)
             };
+            var reloadButton = UIUtils.MakeButton("Refresh from instagram", UIUtils.FONT_SFUIDISPLAY_REGULAR);
+            reloadButton.Margin = new Thickness(0, 5, 0, 0);
+            reloadButton.VerticalOptions = LayoutOptions.EndAndExpand;
+            reloadButton.Clicked += OnReloadClicked;
             selectedImage = _mua.DefaultPicture;
-            if (_mua.Images.Count == 0)
-            {
-                //TODO
-                var empty = new StackLayout {
-                    Spacing = 0,
-                    Children = { header, separator, infoLabel }
-                };
-                root.Children.Add(empty, Constraint.Constant(0), Constraint.Constant(0)
-                , Constraint.RelativeToParent(p => p.Width)
-                , Constraint.RelativeToParent(p => p.Height));
-                Content = root;
-                return;
-            }
-            for (int i = 0; i < Math.Ceiling((double)_mua.Images.Count / ColumnNumber); i++)
-            {
-                grid.RowDefinitions.Add(new RowDefinition { Height = 80 });//new GridLength(1, GridUnitType.Star) });
-            }
+            //if (_mua.Images.Count == 0)
+            //{
+            //    //TODO
+            //    var empty = new StackLayout {
+            //        Spacing = 0,
+            //        Children = { header, separator, infoLabel, reloadButton }
+            //    };
+            //    root.Children.Add(empty, Constraint.Constant(0), Constraint.Constant(0)
+            //    , Constraint.RelativeToParent(p => p.Width)
+            //    , Constraint.RelativeToParent(p => p.Height));
+            //    Content = root;
+            //    return;
+            //}            
             for (int i = 0; i < ColumnNumber; i++)
             {
                 grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -77,9 +78,10 @@ namespace TiroApp.Pages.Mua
             var scrollView = new ScrollView {
                 Content = grid
             };
+            
             var main = new StackLayout {
                 Spacing = 0,
-                Children = { header, separator, infoLabel, scrollView }
+                Children = { header, separator, infoLabel, scrollView, reloadButton }
             };
 
             confirmationWindow = MakeConfirmWindow();
@@ -96,6 +98,12 @@ namespace TiroApp.Pages.Mua
 
         private void FillGrid()
         {
+            grid.Children.Clear();
+            grid.RowDefinitions.Clear();
+            for (int i = 0; i < Math.Ceiling((double)_mua.Images.Count / ColumnNumber); i++)
+            {
+                grid.RowDefinitions.Add(new RowDefinition { Height = 80 });
+            }
             for (int i = 0, col = 0, row = 0; i < _mua.Images.Count; i++, col++)
             {
                 if (col == ColumnNumber)
@@ -106,7 +114,11 @@ namespace TiroApp.Pages.Mua
                 var imageStr = _mua.Images[i];
                 var image = new Image();
                 image.Aspect = Aspect.AspectFill;
-                image.Source = ImageSource.FromUri(new Uri(imageStr));
+                try
+                {
+                    image.Source = ImageSource.FromUri(new Uri(imageStr));
+                }
+                catch { }
                 //image.Source = ImageSource.FromResource("TiroApp.Images.empty_profile.jpg");
                 image.GestureRecognizers.Add(new TapGestureRecognizer(v => {
                     selectedImage = imageStr;
@@ -197,6 +209,39 @@ namespace TiroApp.Pages.Mua
             {
                 UIUtils.HideSpinner(this, spinner);
             });
+        }
+        
+        private void OnReloadClicked(object sender, EventArgs e)
+        {
+            var spinner = UIUtils.ShowSpinner(this);
+            var instagramHelper = new InstagramHelper(_mua.Instagram, this);
+            instagramHelper.OnImagesLoad += (s, instagramStr) =>
+            {
+                if (!string.IsNullOrEmpty(instagramStr))
+                {
+                    DataGate.MuaUpdatePictures(_mua.Id, instagramStr.Split(','), r =>
+                    {
+                        if (r.Code == ResponseCode.OK && r.Result == "true")
+                        {
+                            Device.BeginInvokeOnMainThread(() =>
+                            {
+                                _mua.Images = instagramStr.Split(',').ToList();
+                                FillGrid();
+                            });
+                        }
+                        else
+                        {
+                            UIUtils.ShowServerUnavailable(this);
+                        }
+                        UIUtils.HideSpinner(this, spinner);
+                    });
+                }
+                else
+                {
+                    UIUtils.HideSpinner(this, spinner);
+                }
+            };
+            instagramHelper.Start();
         }
     }
 }
